@@ -24,3 +24,17 @@ protected:
     std::vector<Matrix> m_links;
     Vector3d m_endEffector;
 };
+
+class RevoluteRevolute : public RobotArm
+{
+public:
+    RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi);
+    ~RevoluteRevolute() = default;
+
+    void rotateLink(int link, int theta);
+
+    std::vector<Matrix> getLinks() const { return m_links; }
+    std::vector<Vector3d> getJoints() const { return m_joints; }
+private:
+    float m_lenghtLink1, m_lenghtLink2, m_theta, m_phi;
+};
