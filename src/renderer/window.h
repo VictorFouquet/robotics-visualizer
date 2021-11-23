@@ -1,6 +1,9 @@
 #pragma once
 
 #include <SDL2/SDL.h>
+#include <vector>
+#include "primitive.h"
+#include "circle.h"
 
 class Window
 {
@@ -14,6 +17,8 @@ class Window
         void onRender();
         void onExit();
 
+        void drawCircle(int x, int y, int radius, int r, int g, int b);
+        
     private:
         int m_width;
         int m_height; 
@@ -21,4 +26,6 @@ class Window
         bool m_isOpened;
         SDL_Window *m_window;
         SDL_Renderer *m_renderer;
+
+        std::vector<Circle> m_circlesToRender = {};
 };

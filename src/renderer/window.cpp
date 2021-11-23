@@ -94,3 +94,10 @@ void Window::onExit()
 
     SDL_Quit();
 }
+
+void Window::drawCircle(int x, int y, int radius, int r, int g, int b) 
+{
+    Circle c = Circle(x, y, radius);
+
+    m_circlesToRender.push_back(c);
+}
