@@ -71,6 +71,14 @@ void Window::onEvent(SDL_Event *event)
 
 void Window::onLoop() 
 {
+    SDL_SetRenderDrawColor(m_renderer, 10, 10, 30, 255);
+    SDL_RenderClear(m_renderer);
+
+    for (auto shape : m_circlesToRender)
+    {
+        shape.render(m_renderer);
+    };
+
     SDL_RenderPresent(m_renderer);
 }
 
