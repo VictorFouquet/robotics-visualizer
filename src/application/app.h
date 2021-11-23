@@ -11,5 +11,6 @@ public:
     int run();
 
 private:
-    Window m_window =  Window(640, 480);
+    int m_windowWidth = 640, m_windowHeight = 480;
+    Window m_window =  Window(m_windowWidth, m_windowHeight);
 };
