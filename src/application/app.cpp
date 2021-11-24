@@ -21,4 +21,34 @@ int App::run()
     m_window.onExecute();
 
     return 0;
+int App::init() 
+{
+    m_window =  Window(m_windowWidth, m_windowHeight);
+    m_window.onInit();
+    
+    return 0;
+}
+
+Frame App::computeFrameComponents()
+{
+    Frame frame;
+    std::vector<Vector3d> joints = m_robot->getJoints();
+
+    for (auto joint : joints)
+        frame.addCircle(m_windowWidth / 2 + joint.x, m_windowHeight / 2 - joint.y, 10);
+
+    Vector3d endEffector = m_robot->getEndEffector();
+    frame.addCircle(m_windowWidth / 2 + endEffector.x, m_windowHeight / 2 - endEffector.y, 10);
+
+    std::vector<std::pair<Vector3d, Vector3d>> links = m_robot->getLinks();
+    Vector3d p1(-0.5f, 0.f, 0.f), p2(0.5f, 0.f, 0.f);
+
+    for (auto link : links)
+    {
+        frame.addLine(
+            m_windowWidth / 2 + (int)link.first.x, m_windowHeight / 2 - (int)link.first.y,
+            m_windowWidth / 2 + (int)link.second.x, m_windowHeight / 2 - (int)link.second.y
+        );
+    }
+    return frame;
 }
