@@ -16,25 +16,6 @@ Window::Window(int width, int height)
     m_height = height;  
 }
 
-int Window::onExecute() 
-{
-    SDL_Event event;
-
-    if (onInit() == false)
-        return -1;
-
-    while (m_isOpened) 
-    {
-        while (SDL_PollEvent(&event) != 0)
-            onEvent(&event);
-        
-        onLoop();
-        onRender();
-    }
-
-    return 0;
-}
-
 bool Window::onInit() 
 {
     SDL_Init(SDL_INIT_VIDEO);
@@ -63,6 +44,14 @@ bool Window::onInit()
     return true;
 }
 
+void Window::pollEvents() 
+{
+    SDL_Event event;
+
+    while (SDL_PollEvent(&event) != 0)
+        onEvent(&event);        
+}
+
 void Window::onEvent(SDL_Event *event) 
 {
     if (event->type == SDL_QUIT)
@@ -71,20 +60,27 @@ void Window::onEvent(SDL_Event *event)
 
 void Window::onLoop() 
 {
+
+}
+
+void Window::onRender(Frame frame) 
+{
     SDL_SetRenderDrawColor(m_renderer, 10, 10, 30, 255);
     SDL_RenderClear(m_renderer);
 
-    for (auto shape : m_circlesToRender)
+    for (auto line : frame.getLines())
     {
-        shape.render(m_renderer);
+        line.render(m_renderer);
+    };
+
+    for (auto circle : frame.getCircles())
+    {
+        circle.render(m_renderer);
     };
 
     SDL_RenderPresent(m_renderer);
-}
 
-void Window::onRender() 
-{
-    SDL_Delay(10);
+    SDL_Delay(50);
 }
 
 void Window::onExit() 
@@ -93,11 +89,4 @@ void Window::onExit()
     m_window = NULL;
 
     SDL_Quit();
-}
-
-void Window::drawCircle(int x, int y, int radius, int r, int g, int b) 
-{
-    Circle c = Circle(x, y, radius);
-
-    m_circlesToRender.push_back(c);
 }

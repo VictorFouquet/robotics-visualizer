@@ -2,22 +2,22 @@
 
 #include <SDL2/SDL.h>
 #include <vector>
-#include "primitive.h"
-#include "circle.h"
+#include "frame.h"
 
 class Window
 {
     public:
+        Window() = default;
         Window(int width, int height);
 
-        int onExecute();
         bool onInit();
+        void pollEvents();
         void onEvent(SDL_Event *event);
         void onLoop();
-        void onRender();
+        void onRender(Frame frame);
         void onExit();
 
-        void drawCircle(int x, int y, int radius, int r, int g, int b);
+        inline bool isOpened() const { return m_isOpened; }
         
     private:
         int m_width;
@@ -26,6 +26,4 @@ class Window
         bool m_isOpened;
         SDL_Window *m_window;
         SDL_Renderer *m_renderer;
-
-        std::vector<Circle> m_circlesToRender = {};
 };
