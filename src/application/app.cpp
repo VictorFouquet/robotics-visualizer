@@ -21,9 +21,26 @@ int App::run()
     m_frameToRender++;
 
 
-    m_window.onExecute();
+    while(m_window.isOpened())
+    {
+        // Handle events from window
+        m_window.pollEvents();
+
+        // Frame frame = computeFrameComponents();
+
+        if (m_window.isOpened())
+        {
+            m_window.onLoop();
+            m_window.onRender(m_frames[m_frameToRender]);
+
+            if (m_frameToRender < m_frames.size() - 1)
+                m_frameToRender++;
+        }
+    }
 
     return 0;
+}
+
 int App::init() 
 {
     m_window =  Window(m_windowWidth, m_windowHeight);
