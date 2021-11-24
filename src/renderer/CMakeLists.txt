@@ -1,5 +1,6 @@
 add_library(renderer
     circle.cpp
+    frame.cpp
     line.cpp
     polygon.cpp
     primitive.cpp
