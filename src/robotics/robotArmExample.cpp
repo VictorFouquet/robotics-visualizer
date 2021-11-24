@@ -3,21 +3,29 @@
 RevoluteRevolute::RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi)
     : m_lenghtLink1(lenghtLink1), m_lenghtLink2(lenghtLink2), m_theta(theta), m_phi(phi)
 {
-    Matrix m1 = Matrix::rotate(0.f, 0.f, m_theta) * Matrix::translate(m_lenghtLink1, 0.f, 0.f);
-    Matrix m2 = Matrix::rotate(0.f, 0.f, m_phi) * Matrix::translate(m_lenghtLink2, 0.f, 0.f);
+    std::vector<float> links = { phi, theta };
+
+    rotateJoint(links);
+}
+
+void RevoluteRevolute::rotateJoint(std::vector<float> links) 
+{
+    Matrix m1 = Matrix::rotate(0.f, 0.f, links[0]) * Matrix::translate(m_lenghtLink1, 0.f, 0.f);
+    Matrix m2 = Matrix::rotate(0.f, 0.f, links[1]) * Matrix::translate(m_lenghtLink2, 0.f, 0.f);
     Matrix m3 = m1 * m2;
 
-    Vector3d p(0.f, 0.f, 0.f);
+    Vector3d p1(0.f, 0.f, 0.f);
 
-    m_endEffector = m3 * p;
+    m_endEffector = m3 * p1;
 
     m_transforms = { m1, m2, m3 };
-    m_joints = { Vector3d(0.f, 0.f, 0.f), m1 * p };
+    m_joints = { Vector3d(0.f, 0.f, 0.f), m1 * p1 };
 
-    Matrix link1 = Matrix::scale(lenghtLink1, 1.0f, 0.f) * Matrix::translate(lenghtLink1 / 2, 0.f, 0.f);
-    Matrix link2 = Matrix::scale(lenghtLink2, 1.0f, 0.f) * m1 * Matrix::translate(lenghtLink2 / 2, 0.f, 0.f);
+    Vector3d p2(0.f, 0.f, 0.f);
+    p2 = m1 * p1;
+    std::pair<Vector3d, Vector3d> link1 = { p1, p2 };
+    std::pair<Vector3d, Vector3d> link2 = { p2, m_endEffector };
     m_links = { link1, link2 };
-
 }
 
 void RevoluteRevolute::rotateLink(int link, int theta) 
