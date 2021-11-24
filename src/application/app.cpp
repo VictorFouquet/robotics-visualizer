@@ -3,19 +3,22 @@
 
 int App::run()
 {
-    RevoluteRevolute robot = RevoluteRevolute(100.f, 50.f, 90.f, 45.f);
+    init();
 
-    std::vector<Vector3d> joints = robot.getJoints();
+    RevoluteRevolute derived = RevoluteRevolute(100.f, 50.f, 0.f, 0.f);
+    m_robot = &derived;
 
 
-    for (auto joint : joints)
+    for (int i = 0; i < 90; i++)
     {
-        m_window.drawCircle(m_windowWidth / 2 + joint.x, m_windowHeight / 2 - joint.y, 10, 255, 0, 0);
-        joint.print();
+        std::vector<float> rotate = { (float) i, (float)(i) };
+
+        m_robot->rotateJoint(rotate);
+        Frame frame = computeFrameComponents();
+        m_frames.push_back(frame);
     }
 
-    Vector3d endEffector = robot.getEndEffector();
-    m_window.drawCircle(m_windowWidth / 2 + endEffector.x, m_windowHeight / 2 - endEffector.y, 10, 255, 0, 0);
+    m_frameToRender++;
 
 
     m_window.onExecute();
