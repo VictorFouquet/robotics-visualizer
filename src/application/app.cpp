@@ -70,5 +70,8 @@ Frame App::computeFrameComponents()
             m_windowWidth / 2 + (int)link.second.x, m_windowHeight / 2 - (int)link.second.y
         );
     }
+
+    frame.addCircleBorder(m_windowWidth / 2, m_windowHeight / 2, 150.f, 100.f);
+
     return frame;
 }
