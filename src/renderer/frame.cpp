@@ -36,6 +36,13 @@ void Frame::addTriangle()
     
 }
 
+void Frame::addMessage(std::string message, std::string fontName, int x, int y, int s) 
+{
+    MessageBox m(message, fontName, x, y, s);
+
+    m_messages.push_back(m);
+}
+
 void Frame::addArc(int x, int y, float r, float theta, float phi, float width) 
 {
     Arc arc(x, y, r, theta, phi, width);

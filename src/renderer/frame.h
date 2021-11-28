@@ -5,6 +5,7 @@
 #include "circleBorder.h"
 #include "color.h"
 #include "line.h"
+#include "messageBox.h"
 #include "polygon.h"
 #include "rectangle.h"
 #include "triangle.h"
@@ -25,6 +26,7 @@ public:
     void addPolygon();
     void addRectangle();
     void addTriangle();
+    void addMessage(std::string message, std::string fontName, int x, int y, int s);
 
     std::vector<Arc> getArcs() const { return m_arcs; }
     std::vector<Circle> getCircles() const { return m_circles; }
@@ -33,6 +35,7 @@ public:
     std::vector<Polygon> getPolygons() const { return m_polygons; }
     std::vector<Rectangle> getRectangles() const { return m_rectangles; }
     std::vector<Triangle> getTriangles() const { return m_triangles; }
+    std::vector<MessageBox> getMessages() const { return m_messages; }
 
 private:
     std::vector<Arc>          m_arcs;
@@ -42,4 +45,5 @@ private:
     std::vector<Polygon>      m_polygons;
     std::vector<Rectangle>    m_rectangles;
     std::vector<Triangle>     m_triangles;
+    std::vector<MessageBox>   m_messages;
 };
