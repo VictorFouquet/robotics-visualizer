@@ -1,10 +1,12 @@
 #include "robotArmExample.h"
+#include <assert.h>
+#include <algorithm>
 
 RevoluteRevolute::RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi)
     : m_lenghtLink1(lenghtLink1), m_lenghtLink2(lenghtLink2), m_theta(theta), m_phi(phi)
 {
     std::vector<float> links = { phi, theta };
-
+    m_rotations = { theta, phi };
     rotateJoint(links);
 }
 
@@ -33,6 +35,26 @@ void RevoluteRevolute::rotateLink(int link, int theta)
     
 }
 
+std::vector<float> RevoluteRevolute::inverseKinematics(float x, float y) 
+{
+    float a1 = m_lenghtLink1, a2 = m_lenghtLink2;
+    float r1 = std::sqrt(std::pow(x, 2) + std::pow(y, 2));
+
+    float phi1 = 180.f - computeAngleFromLength(a1, a2, r1) * 180.f / 3.14;
+    float phi2 = 360 - phi1; 
+    std::vector<float> values = { phi1, phi2 };
+    return values;
+}
+
+float RevoluteRevolute::computeAngleFromLength(float a, float b, float c) 
+{
+    // Uses the cosine rule to compute the angle opposite to C
+    float phi = std::acos(
+        ( std::pow(a, 2) + std::pow(b, 2) - std::pow(c, 2) ) / (2 * a * b)
+    );
+
+    return phi;
+}
 
 
 
