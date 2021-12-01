@@ -56,6 +56,13 @@ float RevoluteRevolute::computeAngleFromLength(float a, float b, float c)
     return phi;
 }
 
+float RevoluteRevolute::computeLengthFromAngleAndHypotenuse(float hypotenuse, float phi) 
+{
+    // Uses the sine rule to compute the length opposite to angle phi
+    float length = hypotenuse * std::sin(phi);
+
+    return length;
+}
 
 
 void RobotArm::forwardKinematic2DOF_DEMO()
