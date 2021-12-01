@@ -64,6 +64,14 @@ float RevoluteRevolute::computeLengthFromAngleAndHypotenuse(float hypotenuse, fl
     return length;
 }
 
+float RevoluteRevolute::computeAngleFromOppositeAndHypotenuse(float opposite, float hypotenuse) 
+{
+    // Implements "SOH", phi = asin(opposite / hypothenuse)
+    float phi = std::asin(opposite / hypotenuse);
+
+    return phi;
+}
+
 
 void RobotArm::forwardKinematic2DOF_DEMO()
 {
