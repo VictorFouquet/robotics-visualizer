@@ -23,6 +23,7 @@ public:
     inline float dot(Vector3d vec) const { return x * vec.x + y * vec.y + z * vec.z; }
     
     inline float distanceToVector(Vector3d v) { return std::sqrt(x * v.x + y * v.y + z * v.z ); }
+    inline float angleToVector(Vector3d v) { float x = dot(v) / (magnitude() * v.magnitude()); return x > 1.f ? 1.f : x < -1.f ? -1.f : x; }
 
     inline void print() const { std::cout << "{ " << x << ", " << y << ", " << z << ", " << w << " }" << std::endl; }
 public:
