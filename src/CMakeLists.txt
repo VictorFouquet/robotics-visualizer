@@ -1,4 +1,5 @@
 add_subdirectory(application)
 add_subdirectory(linear_algebra)
+add_subdirectory(geometry)
 add_subdirectory(renderer)
 add_subdirectory(robotics)
