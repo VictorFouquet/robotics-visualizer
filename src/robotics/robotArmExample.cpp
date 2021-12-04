@@ -40,9 +40,28 @@ std::vector<float> RevoluteRevolute::inverseKinematics(float x, float y)
     float a1 = m_lenghtLink1, a2 = m_lenghtLink2;
     float r1 = std::sqrt(std::pow(x, 2) + std::pow(y, 2));
 
-    float phi1 = 180.f - computeAngleFromLength(a1, a2, r1) * 180.f / 3.14;
+    float phiRad = computeAngleFromLength(a1, a2, r1);
+
+    float phi1 = 180.f - phiRad * 180.f / 3.14;
     float phi2 = 360 - phi1; 
-    std::vector<float> values = { phi1, phi2 };
+    
+    float length = computeLengthFromAngleAndHypotenuse(a2, phiRad);
+
+    float gammaRad = computeAngleFromOppositeAndHypotenuse(length, r1);
+    float gamma = gammaRad * 180.f / 3.14;
+
+    float alphaRad = computeAngleFromOppositeAndHypotenuse(y, r1);
+    float alpha = alphaRad * 180.f / 3.14;
+
+    float thetaRad = alphaRad - gammaRad;
+    float theta = thetaRad * 180.f / 3.14;
+
+    if (x < 0)
+        theta = 180.f - theta;
+    else if (x > 0 && y < 0)
+        theta = 360.f + theta;
+
+    std::vector<float> values = { theta, phi1 };
     return values;
 }
 
