@@ -14,7 +14,7 @@ namespace Geometry
         Vector3d getCenter() { return m_center; }
         float getRadius() { return m_radius; }
 
-        std::vector<Vector3d, Vector3d> getIntersectionPointsWithCircle(Circle c);
+        void getIntersectionPointsWithCircle(Circle c, Vector3d& p1, Vector3d& p2);
     private:
         float m_radius;
         Vector3d m_center;
