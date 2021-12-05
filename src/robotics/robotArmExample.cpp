@@ -12,6 +12,7 @@ RevoluteRevolute::RevoluteRevolute(float lenghtLink1, float lenghtLink2, float t
 
 void RevoluteRevolute::rotateJoint(std::vector<float> links) 
 {
+    m_rotations = links;
     Matrix m1 = Matrix::rotate(0.f, 0.f, links[0]) * Matrix::translate(m_lenghtLink1, 0.f, 0.f);
     Matrix m2 = Matrix::rotate(0.f, 0.f, links[1]) * Matrix::translate(m_lenghtLink2, 0.f, 0.f);
     Matrix m3 = m1 * m2;
@@ -37,31 +38,35 @@ void RevoluteRevolute::rotateLink(int link, int theta)
 
 std::vector<float> RevoluteRevolute::inverseKinematics(float x, float y) 
 {
-    float a1 = m_lenghtLink1, a2 = m_lenghtLink2;
-    float r1 = std::sqrt(std::pow(x, 2) + std::pow(y, 2));
+    Vector3d endEffectorVector = Vector3d(x, y);
+    Vector3d u1 = Vector3d(), u2 = Vector3d();
 
-    float phiRad = computeAngleFromLength(a1, a2, r1);
+    Geometry::Circle c1(m_lenghtLink1, Vector3d(0.f, 0.f));
+    Geometry::Circle c2(m_lenghtLink2, Vector3d(x, y));
 
-    float phi1 = 180.f - phiRad * 180.f / 3.14;
-    float phi2 = 360 - phi1; 
-    
-    float length = computeLengthFromAngleAndHypotenuse(a2, phiRad);
+    c1.getIntersectionPointsWithCircle(c2, u1, u2);
 
-    float gammaRad = computeAngleFromOppositeAndHypotenuse(length, r1);
-    float gamma = gammaRad * 180.f / 3.14;
+    Vector3d v1 = endEffectorVector - u1;
+    Vector3d v2 = endEffectorVector - u2;
 
-    float alphaRad = computeAngleFromOppositeAndHypotenuse(y, r1);
-    float alpha = alphaRad * 180.f / 3.14;
+    float theta1 = Vector3d(1.f, 0.f).angleToVector(u1) * 180.f / 3.14;
+    float theta2 = Vector3d(1.f, 0.f).angleToVector(u2) * 180.f / 3.14;
+    if (u1.y < 0)
+    {
+        theta1 = 360.f - theta1;
+    }
+    if (u2.y < 0)
+    {
+        theta2 = 360.f - theta2;
+    }
+    float phi1 = v1.angleToVector(u1) * 180.f / 3.14;
+    float phi2 = 360.f - phi1;
 
-    float thetaRad = alphaRad - gammaRad;
-    float theta = thetaRad * 180.f / 3.14;
+    std::vector<float> values = { 
+        theta1, phi1,
+        theta2, phi2,
+    };
 
-    if (x < 0)
-        theta = 180.f - theta;
-    else if (x > 0 && y < 0)
-        theta = 360.f + theta;
-
-    std::vector<float> values = { theta, phi1 };
     return values;
 }
 
