@@ -1,6 +1,16 @@
 #include "robotArmExample.h"
+#include "circle.h"
 #include <assert.h>
 #include <algorithm>
+
+#ifndef PI
+#define PI 3.14159265
+#endif
+
+static float rad(float n)
+{
+    return 2 * PI * (n / 360);
+}
 
 RevoluteRevolute::RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi)
     : m_lenghtLink1(lenghtLink1), m_lenghtLink2(lenghtLink2), m_theta(theta), m_phi(phi)
@@ -69,33 +79,6 @@ std::vector<float> RevoluteRevolute::inverseKinematics(float x, float y)
 
     return values;
 }
-
-float RevoluteRevolute::computeAngleFromLength(float a, float b, float c) 
-{
-    // Uses the cosine rule to compute the angle opposite to C
-    float phi = std::acos(
-        ( std::pow(a, 2) + std::pow(b, 2) - std::pow(c, 2) ) / (2 * a * b)
-    );
-
-    return phi;
-}
-
-float RevoluteRevolute::computeLengthFromAngleAndHypotenuse(float hypotenuse, float phi) 
-{
-    // Uses the sine rule to compute the length opposite to angle phi
-    float length = hypotenuse * std::sin(phi);
-
-    return length;
-}
-
-float RevoluteRevolute::computeAngleFromOppositeAndHypotenuse(float opposite, float hypotenuse) 
-{
-    // Implements "SOH", phi = asin(opposite / hypothenuse)
-    float phi = std::asin(opposite / hypotenuse);
-
-    return phi;
-}
-
 
 void RobotArm::forwardKinematic2DOF_DEMO()
 {

@@ -43,10 +43,7 @@ public:
 
     void rotateLink(int link, int theta);
     virtual std::vector<float> inverseKinematics(float x, float y) override;
-private:
-    float computeAngleFromLength(float aLength, float bLength, float cLength);
-    float computeLengthFromAngleAndHypotenuse(float hypotenuse, float phi);
-    float computeAngleFromOppositeAndHypotenuse(float opposite, float hypotenuse);
 
+private:
     float m_lenghtLink1, m_lenghtLink2, m_theta, m_phi;
 };
