@@ -80,6 +80,52 @@ std::vector<float> RevoluteRevolute::inverseKinematics(float x, float y)
     return values;
 }
 
+bool RevoluteRevolute::compareDelta(std::vector<float> a, std::vector<float> b)
+{
+    return a[2] < b[2];
+}
+
+std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x, float y) 
+{ 
+    std::vector<float> values = inverseKinematics(x, y);
+    float theta1 = values[0];
+    float phi1 = values[1];
+    float theta2 = values[2];
+    float phi2 = values[3];
+
+
+    float dt1A = theta1 - m_rotations[0];
+    float dt1B = theta1 - m_rotations[0] - 360.f;
+    float dt2A = theta2 - m_rotations[0];
+    float dt2B = theta2 - m_rotations[0] - 360.f;
+    float dp1A = phi1   - m_rotations[1];
+    float dp1B = phi1   - m_rotations[1] - 360.f;
+    float dp2A = phi2   - m_rotations[1];
+    float dp2B = phi2   - m_rotations[1] - 360.f;
+
+    if (m_joints[1].y < 0)
+    {
+        dt1A = 360 - m_rotations[0] + theta1;
+        dt1B = -360.f + dt1A;
+        dt2A = 360.f - m_rotations[0] + theta2;
+        dt2B = -360.f + dt2A;
+    }
+
+    std::vector<std::vector<float>> deltas{
+        { dt1A, dp1A, std::abs(dt1A) + std::abs(dp1A) },
+        { dt1A, dp1B, std::abs(dt1A) + std::abs(dp1B) },
+        { dt1B, dp1A, std::abs(dt1B) + std::abs(dp1A) },
+        { dt1B, dp1B, std::abs(dt1B) + std::abs(dp1B) },
+        { dt2A, dp2A, std::abs(dt2A) + std::abs(dp2A) },
+        { dt2A, dp2B, std::abs(dt2A) + std::abs(dp2B) },
+        { dt2B, dp2A, std::abs(dt2B) + std::abs(dp2A) },
+        { dt2B, dp2B, std::abs(dt2B) + std::abs(dp2B) },
+    };
+    std::sort(deltas.begin(), deltas.end(), compareDelta);
+
+    return deltas;
+}
+
 void RobotArm::forwardKinematic2DOF_DEMO()
 {
     //---------------------------------------------
