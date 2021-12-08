@@ -1,12 +1,14 @@
 #include "circle.h"
+#include "vector3d.h"
 #include <stdlib.h>
+#include <vector>
 
 namespace Geometry
 {
     Circle::Circle(float radius, Vector3d p)
         : m_radius(radius), m_center(p) { }
         
-    std::vector<Vector3d, Vector3d> Circle::getIntersectionPointsWithCircle(Circle c) 
+    void Circle::getIntersectionPointsWithCircle(Circle c, Vector3d& ip1, Vector3d& ip2)
     {
         // Ressource and proof can be found here: http://paulbourke.net/geometry/circlesphere/
 
@@ -19,7 +21,7 @@ namespace Geometry
             ( d < std::abs(m_radius - c.getRadius()) ) ||
         // If d = 0 and r0 = r1 then the circles are coincident and there are an infinite number of solutions.
             ( (d == 0) && (m_radius == c.getRadius()) ) 
-        ) return { Vector3d(), Vector3d() };
+        ) return;
         
         /**
         Considering the two triangles P0P2P3 and P1P2P3 we can write
@@ -43,11 +45,9 @@ namespace Geometry
             
             y3 = y2 -+ h ( x1 - x0 ) / d
         */
-        float x3 = p2.x + ( h * (c.getCenter().y - m_center.y) / d );
-        float x4 = p2.x - ( h * (c.getCenter().y - m_center.y) / d );
-        float y3 = p2.y - ( h * (c.getCenter().x - m_center.x) / d );
-        float y4 = p2.y + ( h * (c.getCenter().x - m_center.x) / d );
-
-        return { Vector3d(x3, y3), Vector3d(x4,y4) };
+        ip1.x = p2.x + ( h * (c.getCenter().y - m_center.y) / d );
+        ip2.x = p2.x - ( h * (c.getCenter().y - m_center.y) / d );
+        ip1.y = p2.y - ( h * (c.getCenter().x - m_center.x) / d );
+        ip2.y = p2.y + ( h * (c.getCenter().x - m_center.x) / d );
     }
 }

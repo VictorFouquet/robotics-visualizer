@@ -23,11 +23,14 @@ public:
     std::vector<Vector3d> getJoints() const { return m_joints; }
 
     virtual void rotateJoint(std::vector<float>) {};
-
+    virtual std::vector<float> inverseKinematics(float x, float y) { return {}; }
+    virtual std::vector<float> getRotations() const { return m_rotations; }
+    virtual std::vector<std::vector<float>> getDeltasBetweenPoses(float x, float y) { return {}; }
 protected:
     std::vector<Matrix> m_transforms;
     std::vector<Vector3d> m_joints;
     std::vector<std::pair<Vector3d, Vector3d>> m_links;
+    std::vector<float> m_rotations;
     Vector3d m_endEffector;
 };
 
@@ -40,7 +43,11 @@ public:
     virtual void rotateJoint(std::vector<float>) override;
 
     void rotateLink(int link, int theta);
+    virtual std::vector<float> inverseKinematics(float x, float y) override;
+    virtual std::vector<std::vector<float>> getDeltasBetweenPoses(float x, float y) override;
 
+private:
+    static bool compareDelta(std::vector<float> a, std::vector<float> b);
 private:
     float m_lenghtLink1, m_lenghtLink2, m_theta, m_phi;
 };

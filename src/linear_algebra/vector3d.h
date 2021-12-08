@@ -26,8 +26,10 @@ public:
     inline float magnitude() const { return std::sqrt(x * x + y * y + z * z); }
     inline float dot(Vector3d vec) const { return x * vec.x + y * vec.y + z * vec.z; }
     
-    inline float distanceToVector(Vector3d v) { return std::sqrt(x * v.x + y * v.y + z * v.z ); }
-    inline float angleToVector(Vector3d v) { float x = dot(v) / (magnitude() * v.magnitude()); return x > 1.f ? 1.f : x < -1.f ? -1.f : x; }
+    inline float distanceToVector(Vector3d v) { return std::sqrt(std::pow(x - v.x, 2) + std::pow(y - v.y, 2) + std::pow(z - v.z, 2) ); }
+    inline float angleToVector(Vector3d v) { float x = dot(v) / (magnitude() * v.magnitude()); return std::acos(x > 1.f ? 1.f : x < -1.f ? -1.f : x); }
+
+    int orientation(Vector3d q, Vector3d r);
 
     inline void print() const { std::cout << "{ " << x << ", " << y << ", " << z << ", " << w << " }" << std::endl; }
 public:
