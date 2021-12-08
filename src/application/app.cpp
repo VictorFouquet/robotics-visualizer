@@ -20,11 +20,11 @@ int App::run()
 
     m_frameToRender++;
 
-
     while(m_window.isOpened())
     {
+        AppEvent event = { .clickCoord = { -1.f, -1.f }, .keyCode = -1 };
         // Handle events from window
-        m_window.pollEvents();
+        m_window.pollEvents(event);
 
         // Frame frame = computeFrameComponents();
 

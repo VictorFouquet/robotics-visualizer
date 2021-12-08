@@ -44,18 +44,23 @@ bool Window::onInit()
     return true;
 }
 
-void Window::pollEvents() 
+void Window::pollEvents(AppEvent& e) 
 {
     SDL_Event event;
 
     while (SDL_PollEvent(&event) != 0)
-        onEvent(&event);        
+        onEvent(&event, e);        
 }
 
-void Window::onEvent(SDL_Event *event) 
+void Window::onEvent(SDL_Event *event, AppEvent& appEvent) 
 {
     if (event->type == SDL_QUIT)
         m_isOpened = false;
+    else if (event->type == SDL_MOUSEBUTTONDOWN)
+    {
+        appEvent.clickCoord.first = event->button.x;
+        appEvent.clickCoord.second = event->button.y;
+    }
 }
 
 void Window::onLoop() 
