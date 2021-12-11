@@ -126,6 +126,51 @@ std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x,
     return deltas;
 }
 
+std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(float x, float y, int step) 
+{
+    std::vector<std::vector<Vector3d>> retData = { };
+    
+    float theta = m_rotations[0], phi = m_rotations[1];
+
+    std::vector<std::vector<float>> deltas = getDeltasBetweenPoses(x, y);
+    float deltaT = deltas[0][0], deltaP = deltas[0][1];
+    // -1, -70
+    float maxDelta = std::max(std::abs(deltaT), std::abs(deltaP));
+    
+    float unitDeltaT = deltaT / maxDelta;
+    float unitDeltaP = deltaP / maxDelta;
+
+    for (int i = 0; i < (int)maxDelta; i++)
+    {
+        if (i%step == 0)
+        {
+            std::vector<Vector3d> stepToRender = { Vector3d(0.f, 0.f, 0.f) };
+
+            // rotateJoint({ values[0], values[1]});
+            rotateJoint({ m_rotations[0] + unitDeltaT, m_rotations[1] + unitDeltaP });
+            // std::vector<float> values = inverseKinematics(m_endEffector.x, m_endEffector.y);
+            stepToRender.push_back(Vector3d(m_joints[1].x, m_joints[1].y, 0.f));
+            stepToRender.push_back(Vector3d(m_endEffector.x, m_endEffector.y, 0.f));
+            stepToRender.push_back(Vector3d(m_rotations[0], m_rotations[1], 0.f));
+            retData.push_back(stepToRender);
+        }
+        theta += unitDeltaT;
+        phi += unitDeltaP;
+
+        if (phi < 0) phi = 360.f - phi;
+        std::vector<float> rotate = { theta, phi };
+        
+        rotateJoint(rotate);
+    }
+    std::vector<Vector3d> stepToRender = { Vector3d(0.f, 0.f, 0.f) };
+    stepToRender.push_back(Vector3d(m_joints[1].x, m_joints[1].y, 0.f));
+    stepToRender.push_back(Vector3d(m_endEffector.x, m_endEffector.y, 0.f));
+    stepToRender.push_back(Vector3d(theta, phi, 0.f));
+    retData.push_back(stepToRender);
+
+    return retData;
+}
+
 void RobotArm::forwardKinematic2DOF_DEMO()
 {
     //---------------------------------------------
