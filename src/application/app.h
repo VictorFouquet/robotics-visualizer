@@ -16,7 +16,7 @@ public:
 
 private:
     int init();
-    Frame computeFrameComponents();
+    Frame computeFrameComponents(std::vector<Vector3d> step);
 private:
     int m_windowWidth = 640, m_windowHeight = 480;
     Window m_window =  Window(m_windowWidth, m_windowHeight);
