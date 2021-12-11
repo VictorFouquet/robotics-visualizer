@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <vector>
 #include "frame.h"
+#include "event.h"
 
 class Window
 {
@@ -11,8 +12,8 @@ class Window
         Window(int width, int height);
 
         bool onInit();
-        void pollEvents();
-        void onEvent(SDL_Event *event);
+        void pollEvents(AppEvent& e);
+        void onEvent(SDL_Event *event, AppEvent& appEvent);
         void onLoop();
         void onRender(Frame frame);
         void onExit();

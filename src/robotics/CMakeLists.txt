@@ -8,4 +8,5 @@ target_include_directories(robotics PUBLIC
 
 target_link_libraries(robotics
     linear_algebra
+    geometry
 )

@@ -1,32 +1,36 @@
 #include "app.h"
 #include "robotArmExample.h"
+#include <algorithm>
+
 
 int App::run()
 {
     init();
 
-    RevoluteRevolute derived = RevoluteRevolute(100.f, 50.f, 0.f, 0.f);
+    RevoluteRevolute derived = RevoluteRevolute(100.f, 50.f, 0.f, 0.f, 20.f, 1.f);
     m_robot = &derived;
-
-
-    for (int i = 0; i < 90; i++)
-    {
-        std::vector<float> rotate = { (float) i, (float)(i) };
-
-        m_robot->rotateJoint(rotate);
-        Frame frame = computeFrameComponents();
-        m_frames.push_back(frame);
-    }
+    std::vector<Vector3d> baseFrame = { 
+        Vector3d(0.f, 0.f, 0.f),
+        Vector3d(100.f, 0.f, 0.f),
+        Vector3d(150.f, 0.f, 0.f),
+        Vector3d(0.f, 0.f, 0.f)
+    };
+    Frame frame = computeFrameComponents(baseFrame);
+    m_frames.push_back(frame);
 
     m_frameToRender++;
 
-
     while(m_window.isOpened())
     {
+        AppEvent event = { .clickCoord = { -1.f, -1.f }, .keyCode = -1 };
         // Handle events from window
-        m_window.pollEvents();
+        m_window.pollEvents(event);
 
-        // Frame frame = computeFrameComponents();
+        if (event.clickCoord.first > -1.f)
+        {
+            Vector3d point(event.clickCoord.first, event.clickCoord.second, 0.f);
+            handleClick(point);
+        }
 
         if (m_window.isOpened())
         {
@@ -49,26 +53,46 @@ int App::init()
     return 0;
 }
 
-Frame App::computeFrameComponents()
+Frame App::computeFrameComponents(std::vector<Vector3d> step)
 {
     Frame frame;
-    std::vector<Vector3d> joints = m_robot->getJoints();
+    frame.addCircle(m_windowWidth / 2 + step[0].x, m_windowHeight / 2 + step[0].y, 10);
+    frame.addCircle(m_windowWidth / 2 + step[1].x, m_windowHeight / 2 - step[1].y, 10);
+    frame.addCircle(m_windowWidth / 2 + step[2].x, m_windowHeight / 2 - step[2].y, 10);
+    frame.addLine(
+        m_windowWidth / 2 + step[0].x, m_windowHeight / 2 + step[0].x,
+        m_windowWidth / 2 + step[1].x, m_windowHeight / 2 - step[1].y
+    );
+    frame.addLine(
+        m_windowWidth / 2 + step[1].x, m_windowHeight / 2 - step[1].y,
+        m_windowWidth / 2 + step[2].x, m_windowHeight / 2 - step[2].y
+    );
 
-    for (auto joint : joints)
-        frame.addCircle(m_windowWidth / 2 + joint.x, m_windowHeight / 2 - joint.y, 10);
+    int i = 1;
+    frame.addMessage("a1: " + std::to_string(step[3].x), "roboto.ttf", 100, 100 + i * 15, 12);
+    i++;
+    frame.addMessage("a2: " + std::to_string(step[3].y), "roboto.ttf", 100, 100 + i * 15, 12);
+    i++;
 
-    Vector3d endEffector = m_robot->getEndEffector();
-    frame.addCircle(m_windowWidth / 2 + endEffector.x, m_windowHeight / 2 - endEffector.y, 10);
+    frame.addCircleBorder(m_windowWidth / 2, m_windowHeight / 2, 150.f, 100.f);
 
-    std::vector<std::pair<Vector3d, Vector3d>> links = m_robot->getLinks();
-    Vector3d p1(-0.5f, 0.f, 0.f), p2(0.5f, 0.f, 0.f);
-
-    for (auto link : links)
-    {
-        frame.addLine(
-            m_windowWidth / 2 + (int)link.first.x, m_windowHeight / 2 - (int)link.first.y,
-            m_windowWidth / 2 + (int)link.second.x, m_windowHeight / 2 - (int)link.second.y
-        );
-    }
     return frame;
+}
+
+void App::handleClick(Vector3d point) 
+{
+    float deltaX = point.x - m_windowWidth / 2;
+    float deltaY = point.y - m_windowHeight / 2;
+
+    float dist = std::sqrt(deltaX * deltaX + deltaY * deltaY);
+    if (dist > 50.f && dist < 150.f)
+    {
+        std::vector<std::vector<Vector3d>> stepsToRender = m_robot->interpolate(deltaX, -deltaY, 5);
+        for (auto step : stepsToRender)
+        {
+            Frame frame = computeFrameComponents(step);
+            m_frames.push_back(frame);
+        }
+        std::cout<<std::endl;
+    }
 }
