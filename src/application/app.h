@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gui.h"
 #include "window.h"
 #include "robotArmExample.h"
 
