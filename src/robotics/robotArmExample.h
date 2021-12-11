@@ -14,9 +14,6 @@ public:
     ~RobotArm() = default;
 
 public:
-    static void forwardKinematic2DOF_DEMO();
-    static void forwardKinematics6DOF(float theta1, float theta2, float theta3, float theta4, float theta5, float theta6);
-
     Vector3d getEndEffector() const { return m_endEffector; }
 
     std::vector<std::pair<Vector3d, Vector3d>> getLinks() const { return m_links; }
@@ -39,7 +36,7 @@ protected:
 class RevoluteRevolute : public RobotArm
 {
 public:
-    RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi);
+    RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi, float weightLink1=1.f, float weightLink2=1.f);
     ~RevoluteRevolute() = default;
 
     virtual void rotateJoint(std::vector<float>) override;
@@ -52,5 +49,5 @@ public:
 private:
     static bool compareDelta(std::vector<float> a, std::vector<float> b);
 private:
-    float m_lenghtLink1, m_lenghtLink2, m_theta, m_phi;
+    float m_lenghtLink1, m_lenghtLink2, m_theta, m_phi, m_weightLink1, m_weightLink2;
 };

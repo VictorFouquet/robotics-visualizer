@@ -12,8 +12,8 @@ static float rad(float n)
     return 2 * PI * (n / 360);
 }
 
-RevoluteRevolute::RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi)
-    : m_lenghtLink1(lenghtLink1), m_lenghtLink2(lenghtLink2), m_theta(theta), m_phi(phi)
+RevoluteRevolute::RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi, float weightLink1, float weightLink2)
+    : m_lenghtLink1(lenghtLink1), m_lenghtLink2(lenghtLink2), m_theta(theta), m_phi(phi), m_weightLink1(weightLink1), m_weightLink2(weightLink2)
 {
     std::vector<float> links = { phi, theta };
     m_rotations = { theta, phi };
@@ -39,11 +39,6 @@ void RevoluteRevolute::rotateJoint(std::vector<float> links)
     std::pair<Vector3d, Vector3d> link1 = { p1, p2 };
     std::pair<Vector3d, Vector3d> link2 = { p2, m_endEffector };
     m_links = { link1, link2 };
-}
-
-void RevoluteRevolute::rotateLink(int link, int theta) 
-{
-    
 }
 
 std::vector<float> RevoluteRevolute::inverseKinematics(float x, float y) 
@@ -110,16 +105,24 @@ std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x,
         dt2A = 360.f - m_rotations[0] + theta2;
         dt2B = -360.f + dt2A;
     }
+    int orientation = m_joints[0].orientation(m_joints[1], m_endEffector);
+    if (m_joints[0].orientation(m_joints[1], m_endEffector) > 0)
+    {
+        dp1A = 360 - m_rotations[1] + phi1;
+        dp1B = -360.f + dp1A;
+        dp2A = 360.f - m_rotations[1] + phi2;
+        dp2B = -360.f + dp2A;
+    }
 
     std::vector<std::vector<float>> deltas{
-        { dt1A, dp1A, std::abs(dt1A) + std::abs(dp1A) },
-        { dt1A, dp1B, std::abs(dt1A) + std::abs(dp1B) },
-        { dt1B, dp1A, std::abs(dt1B) + std::abs(dp1A) },
-        { dt1B, dp1B, std::abs(dt1B) + std::abs(dp1B) },
-        { dt2A, dp2A, std::abs(dt2A) + std::abs(dp2A) },
-        { dt2A, dp2B, std::abs(dt2A) + std::abs(dp2B) },
-        { dt2B, dp2A, std::abs(dt2B) + std::abs(dp2A) },
-        { dt2B, dp2B, std::abs(dt2B) + std::abs(dp2B) },
+        { dt1A, dp1A, std::abs(dt1A) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 },
+        { dt1A, dp1B, std::abs(dt1A) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 },
+        { dt1B, dp1A, std::abs(dt1B) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 },
+        { dt1B, dp1B, std::abs(dt1B) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 },
+        { dt2A, dp2A, std::abs(dt2A) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 },
+        { dt2A, dp2B, std::abs(dt2A) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 },
+        { dt2B, dp2A, std::abs(dt2B) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 },
+        { dt2B, dp2B, std::abs(dt2B) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 },
     };
     std::sort(deltas.begin(), deltas.end(), compareDelta);
 
@@ -134,7 +137,6 @@ std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(float x, float 
 
     std::vector<std::vector<float>> deltas = getDeltasBetweenPoses(x, y);
     float deltaT = deltas[0][0], deltaP = deltas[0][1];
-    // -1, -70
     float maxDelta = std::max(std::abs(deltaT), std::abs(deltaP));
     
     float unitDeltaT = deltaT / maxDelta;
@@ -146,18 +148,31 @@ std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(float x, float 
         {
             std::vector<Vector3d> stepToRender = { Vector3d(0.f, 0.f, 0.f) };
 
-            // rotateJoint({ values[0], values[1]});
-            rotateJoint({ m_rotations[0] + unitDeltaT, m_rotations[1] + unitDeltaP });
-            // std::vector<float> values = inverseKinematics(m_endEffector.x, m_endEffector.y);
+            float roatA = m_rotations[0] + unitDeltaT;
+            float roatB = m_rotations[1] + unitDeltaP;
+            if (roatA < 0.f)
+                roatA += 360.f;
+            if (roatB < 0.f)
+                roatB += 360.f;
+            if (roatA > 360.f)
+                roatA = fmod(roatA, 360.f);
+            if (roatB < 0.f)
+                roatB = fmod(roatB, 360.f);
+            rotateJoint({ roatA, roatB });
             stepToRender.push_back(Vector3d(m_joints[1].x, m_joints[1].y, 0.f));
             stepToRender.push_back(Vector3d(m_endEffector.x, m_endEffector.y, 0.f));
-            stepToRender.push_back(Vector3d(m_rotations[0], m_rotations[1], 0.f));
+            stepToRender.push_back(Vector3d(roatA, roatB, 0.f));
             retData.push_back(stepToRender);
         }
         theta += unitDeltaT;
         phi += unitDeltaP;
 
-        if (phi < 0) phi = 360.f - phi;
+        if (phi < 0) phi += 360.f;
+        if (theta < 0) theta += 360.f;
+        if (theta > 360.f)
+            theta = fmod(theta, 360.f);
+        if (phi > 360.f)
+            phi = fmod(phi, 360.f);
         std::vector<float> rotate = { theta, phi };
         
         rotateJoint(rotate);
@@ -169,81 +184,4 @@ std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(float x, float 
     retData.push_back(stepToRender);
 
     return retData;
-}
-
-void RobotArm::forwardKinematic2DOF_DEMO()
-{
-    //---------------------------------------------
-    // Simulating a 2 degrees of freedom robot arm
-    //---------------------------------------------
-    // The robot arm is composed of 2 links and 2 rotational joints.
-    // First link is attached to the ground by a joint, second link is attached to 
-    // the first link by another joint.
-    // End effector is considered to be the end of the second link.
-    // Position of a link can be represented by matrix.
-    // Location of the end effector can be computed by multiplying those matrices.
-
-    std::cout << "Simulating two DOF robot arm: " << std::endl;
-
-    Matrix m1 = Matrix::translate(10.f, 0.f, 0.f);
-    Matrix m2 = Matrix::translate(10.f, 0.f, 0.f);
-    Matrix m3 = m1 * m2;
-
-    Vector3d p(0.f, 0.f, 0.f);
-
-    std::cout << "Position of second joint when no rotation is applied : ";
-    (m1 * p).print();
-    std::cout << "Position of end effector when no rotation is applied : ";
-    (m3 * p).print();
-
-    m1 = Matrix::rotate(0.f, 0.f, 90.f) * Matrix::translate(10.f, 0.f, 0.f);
-    m3 = m1 * m2;
-
-    std::cout << "\nPosition of second joint when a rotation of 90° is applied on first joint : ";
-    (m1 * p).print();
-    std::cout << "Position of end effector when a rotation of 90° is applied on first joint : ";
-    (m3 * p).print();
-
-    m2 = Matrix::rotate(0.f, 0.f, 90.f) * Matrix::translate(10.f, 0.f, 0.f);
-    m3 = m1 * m2;
-
-    std::cout << "\nPosition of second joint when a rotation of 90° is applied on both joints : ";
-    (m1 * p).print();
-    std::cout << "Position of end effector when a rotation of 90° is applied on both joints : ";
-    (m3 * p).print();
-}
-
-
-void RobotArm::forwardKinematics6DOF(float theta1, float theta2, float theta3, float theta4, float theta5, float theta6)
-{
-    // Reference robot-arm illustration found here :
-    // https://www.semanticscholar.org/paper/Multi-DOF-counterbalance-mechanism-for-low-cost%2C-Kim-Min/fe6beac6456dacbd54fe7b9f149c26f42fcc4fb8/figure/5
-    
-    Vector3d endEffector(0.f, 0.f, 0.f);
-
-    Matrix joint1 = Matrix::rotate(0.f, 0.f, theta1) * Matrix::translate(0.f, 0.f, 10.f);
-    std::cout << "End position of link 1 :\n";
-    (joint1 * endEffector).print();
-
-    Matrix joint2 = Matrix::rotate(90.f, 0.f, theta2) * Matrix::translate(10.f, 0.f, 0.f);
-    std::cout << "End position of link 2 :\n";
-    ((joint1 * joint2) * endEffector).print();
-
-    Matrix joint3 = Matrix::rotate(0.f, 0.f, theta3) * Matrix::translate(10.f, 0.f, 0.f);
-    std::cout << "End position of link 3 :\n";
-    ((joint1 * joint2 * joint3) * endEffector).print();
-
-    Matrix joint4 = Matrix::rotate(0.f, 0.f, theta4) * Matrix::translate(10.f, 0.f, 0.f);
-    std::cout << "End position of link 4 :\n";
-    ((joint1 * joint2 * joint3 * joint4) * endEffector).print();
-
-    Matrix joint5 = Matrix::rotate(-90.f, 0.f, theta5) * Matrix::translate(10.f, 0.f, 0.f);
-    std::cout << "End position of link 5 :\n";
-    ((joint1 * joint2 * joint3 * joint4 * joint5) * endEffector).print();
-
-    Matrix joint6 = Matrix::rotate(0.f, 90.f, theta6) * Matrix::translate(0.f, 0.f, 10.f);
-    Matrix transform = joint1 * joint2 * joint3 * joint4 * joint5 * joint6;
-
-    std::cout << "Position of end effector :\n";
-    (transform * endEffector).print();
 }
