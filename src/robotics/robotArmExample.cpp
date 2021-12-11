@@ -12,8 +12,8 @@ static float rad(float n)
     return 2 * PI * (n / 360);
 }
 
-RevoluteRevolute::RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi)
-    : m_lenghtLink1(lenghtLink1), m_lenghtLink2(lenghtLink2), m_theta(theta), m_phi(phi)
+RevoluteRevolute::RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi, float weightLink1, float weightLink2)
+    : m_lenghtLink1(lenghtLink1), m_lenghtLink2(lenghtLink2), m_theta(theta), m_phi(phi), m_weightLink1(weightLink1), m_weightLink2(weightLink2)
 {
     std::vector<float> links = { phi, theta };
     m_rotations = { theta, phi };
@@ -115,14 +115,14 @@ std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x,
     }
 
     std::vector<std::vector<float>> deltas{
-        { dt1A, dp1A, std::abs(dt1A) * 20 + std::abs(dp1A) },
-        { dt1A, dp1B, std::abs(dt1A) * 20 + std::abs(dp1B) },
-        { dt1B, dp1A, std::abs(dt1B) * 20 + std::abs(dp1A) },
-        { dt1B, dp1B, std::abs(dt1B) * 20 + std::abs(dp1B) },
-        { dt2A, dp2A, std::abs(dt2A) * 20 + std::abs(dp2A) },
-        { dt2A, dp2B, std::abs(dt2A) * 20 + std::abs(dp2B) },
-        { dt2B, dp2A, std::abs(dt2B) * 20 + std::abs(dp2A) },
-        { dt2B, dp2B, std::abs(dt2B) * 20 + std::abs(dp2B) },
+        { dt1A, dp1A, std::abs(dt1A) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 },
+        { dt1A, dp1B, std::abs(dt1A) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 },
+        { dt1B, dp1A, std::abs(dt1B) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 },
+        { dt1B, dp1B, std::abs(dt1B) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 },
+        { dt2A, dp2A, std::abs(dt2A) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 },
+        { dt2A, dp2B, std::abs(dt2A) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 },
+        { dt2B, dp2A, std::abs(dt2B) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 },
+        { dt2B, dp2B, std::abs(dt2B) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 },
     };
     std::sort(deltas.begin(), deltas.end(), compareDelta);
 

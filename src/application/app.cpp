@@ -7,7 +7,7 @@ int App::run()
 {
     init();
 
-    RevoluteRevolute derived = RevoluteRevolute(100.f, 50.f, 0.f, 0.f);
+    RevoluteRevolute derived = RevoluteRevolute(100.f, 50.f, 0.f, 0.f, 20.f, 1.f);
     m_robot = &derived;
     std::vector<Vector3d> baseFrame = { 
         Vector3d(0.f, 0.f, 0.f),
