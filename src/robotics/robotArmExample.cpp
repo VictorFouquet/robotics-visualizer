@@ -129,7 +129,6 @@ std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(float x, float 
 
     std::vector<std::vector<float>> deltas = getDeltasBetweenPoses(x, y);
     float deltaT = deltas[0][0], deltaP = deltas[0][1];
-    // -1, -70
     float maxDelta = std::max(std::abs(deltaT), std::abs(deltaP));
     
     float unitDeltaT = deltaT / maxDelta;
@@ -141,18 +140,31 @@ std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(float x, float 
         {
             std::vector<Vector3d> stepToRender = { Vector3d(0.f, 0.f, 0.f) };
 
-            // rotateJoint({ values[0], values[1]});
-            rotateJoint({ m_rotations[0] + unitDeltaT, m_rotations[1] + unitDeltaP });
-            // std::vector<float> values = inverseKinematics(m_endEffector.x, m_endEffector.y);
+            float roatA = m_rotations[0] + unitDeltaT;
+            float roatB = m_rotations[1] + unitDeltaP;
+            if (roatA < 0.f)
+                roatA += 360.f;
+            if (roatB < 0.f)
+                roatB += 360.f;
+            if (roatA > 360.f)
+                roatA = fmod(roatA, 360.f);
+            if (roatB < 0.f)
+                roatB = fmod(roatB, 360.f);
+            rotateJoint({ roatA, roatB });
             stepToRender.push_back(Vector3d(m_joints[1].x, m_joints[1].y, 0.f));
             stepToRender.push_back(Vector3d(m_endEffector.x, m_endEffector.y, 0.f));
-            stepToRender.push_back(Vector3d(m_rotations[0], m_rotations[1], 0.f));
+            stepToRender.push_back(Vector3d(roatA, roatB, 0.f));
             retData.push_back(stepToRender);
         }
         theta += unitDeltaT;
         phi += unitDeltaP;
 
         if (phi < 0) phi = 360.f - phi;
+        if (theta < 0) theta += 360.f;
+        if (theta > 360.f)
+            theta = fmod(theta, 360.f);
+        if (phi < 0.f)
+            phi = fmod(phi, 360.f);
         std::vector<float> rotate = { theta, phi };
         
         rotateJoint(rotate);
