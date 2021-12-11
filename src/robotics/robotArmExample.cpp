@@ -105,16 +105,24 @@ std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x,
         dt2A = 360.f - m_rotations[0] + theta2;
         dt2B = -360.f + dt2A;
     }
+    int orientation = m_joints[0].orientation(m_joints[1], m_endEffector);
+    if (m_joints[0].orientation(m_joints[1], m_endEffector) > 0)
+    {
+        dp1A = 360 - m_rotations[1] + phi1;
+        dp1B = -360.f + dp1A;
+        dp2A = 360.f - m_rotations[1] + phi2;
+        dp2B = -360.f + dp2A;
+    }
 
     std::vector<std::vector<float>> deltas{
-        { dt1A, dp1A, std::abs(dt1A) + std::abs(dp1A) },
-        { dt1A, dp1B, std::abs(dt1A) + std::abs(dp1B) },
-        { dt1B, dp1A, std::abs(dt1B) + std::abs(dp1A) },
-        { dt1B, dp1B, std::abs(dt1B) + std::abs(dp1B) },
-        { dt2A, dp2A, std::abs(dt2A) + std::abs(dp2A) },
-        { dt2A, dp2B, std::abs(dt2A) + std::abs(dp2B) },
-        { dt2B, dp2A, std::abs(dt2B) + std::abs(dp2A) },
-        { dt2B, dp2B, std::abs(dt2B) + std::abs(dp2B) },
+        { dt1A, dp1A, std::abs(dt1A) * 20 + std::abs(dp1A) },
+        { dt1A, dp1B, std::abs(dt1A) * 20 + std::abs(dp1B) },
+        { dt1B, dp1A, std::abs(dt1B) * 20 + std::abs(dp1A) },
+        { dt1B, dp1B, std::abs(dt1B) * 20 + std::abs(dp1B) },
+        { dt2A, dp2A, std::abs(dt2A) * 20 + std::abs(dp2A) },
+        { dt2A, dp2B, std::abs(dt2A) * 20 + std::abs(dp2B) },
+        { dt2B, dp2A, std::abs(dt2B) * 20 + std::abs(dp2A) },
+        { dt2B, dp2B, std::abs(dt2B) * 20 + std::abs(dp2B) },
     };
     std::sort(deltas.begin(), deltas.end(), compareDelta);
 
@@ -159,11 +167,11 @@ std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(float x, float 
         theta += unitDeltaT;
         phi += unitDeltaP;
 
-        if (phi < 0) phi = 360.f - phi;
+        if (phi < 0) phi += 360.f;
         if (theta < 0) theta += 360.f;
         if (theta > 360.f)
             theta = fmod(theta, 360.f);
-        if (phi < 0.f)
+        if (phi > 360.f)
             phi = fmod(phi, 360.f);
         std::vector<float> rotate = { theta, phi };
         
