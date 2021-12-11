@@ -17,6 +17,7 @@ public:
 private:
     int init();
     Frame computeFrameComponents(std::vector<Vector3d> step);
+    void handleClick(Vector3d point);
 private:
     int m_windowWidth = 640, m_windowHeight = 480;
     Window m_window =  Window(m_windowWidth, m_windowHeight);

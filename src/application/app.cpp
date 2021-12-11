@@ -26,6 +26,11 @@ int App::run()
         // Handle events from window
         m_window.pollEvents(event);
 
+        if (event.clickCoord.first > -1.f)
+        {
+            Vector3d point(event.clickCoord.first, event.clickCoord.second, 0.f);
+            handleClick(point);
+        }
 
         if (m_window.isOpened())
         {
@@ -74,4 +79,20 @@ Frame App::computeFrameComponents(std::vector<Vector3d> step)
     return frame;
 }
 
+void App::handleClick(Vector3d point) 
+{
+    float deltaX = point.x - m_windowWidth / 2;
+    float deltaY = point.y - m_windowHeight / 2;
+
+    float dist = std::sqrt(deltaX * deltaX + deltaY * deltaY);
+    if (dist > 50.f && dist < 150.f)
+    {
+        std::vector<std::vector<Vector3d>> stepsToRender = m_robot->interpolate(deltaX, -deltaY, 5);
+        for (auto step : stepsToRender)
+        {
+            Frame frame = computeFrameComponents(step);
+            m_frames.push_back(frame);
+        }
+        std::cout<<std::endl;
+    }
 }
