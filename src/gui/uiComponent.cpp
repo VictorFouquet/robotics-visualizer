@@ -1,4 +1,9 @@
+#include <iostream>
+
 #include "uiComponent.h"
+#include "frame.h"
+#include <iostream>
+
 
 UIComponent::UIComponent(int width, int height, int posX, int posY)
     : m_width(width), m_height(height), m_posX(posX), m_posY(posY)
@@ -39,3 +44,16 @@ void UIComponent::render(Frame* frame)
     }
 }
 
+void UIComponent::onEvent(AppEvent e) 
+{
+    bool cliked = (bool)(m_type & CLICKABLE);
+    if 
+    (
+        (bool)(m_type & CLICKABLE) &&
+        e.clickCoord.first > m_posX && e.clickCoord.first < m_posX + m_width &&
+        e.clickCoord.second > m_posY && e.clickCoord.second < m_posY + m_height
+    )
+        m_clicked = true;
+    else
+        m_clicked = false;
+}

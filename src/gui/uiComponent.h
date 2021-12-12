@@ -46,6 +46,7 @@ public:
     inline std::vector<UIComponent> getChildren() { return m_children; }
 
 
+    void onEvent(AppEvent e);
     inline void callback() { m_callback(); }
 
 protected:
