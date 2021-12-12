@@ -37,6 +37,8 @@ public:
     inline void setInnerText(std::string text) { m_innerText = text; }
     inline void setBackgroundColor(int r, int g, int b, int a) { m_backgroundColor = { r, g, b, a }; }
     inline void setBorderColor(int r, int g, int b, int a) { m_borderColor = { r, g, b, a }; }
+    inline void setCallback(std::function<void()> f) { m_callback = f; }
+    
     inline int getType() { return m_type; }
     inline std::string getInnerText() { return m_innerText; }
     inline std::vector<int> getBackgroundColor(int r, int g, int b) { return m_backgroundColor; }
@@ -44,12 +46,15 @@ public:
     inline std::vector<UIComponent> getChildren() { return m_children; }
 
 
+    inline void callback() { m_callback(); }
+
 protected:
     int m_width, m_height, m_posX, m_posY;
     std::string m_innerText;
     std::vector<int> m_backgroundColor{ 0, 0, 0, 0 };
     std::vector<int> m_borderColor{ 0, 0, 0, 0 };
     std::vector<UIComponent> m_children = {};
+    std::function<void()> m_callback;
 
     int m_type = 0;
 };
