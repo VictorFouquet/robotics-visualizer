@@ -19,6 +19,7 @@ public:
     static const int CLICKABLE = 0 | BUTTON;
 
 public:
+    UIComponent() = default;
     UIComponent(int width, int height, int posX, int posY);
     ~UIComponent() = default;
 
@@ -27,6 +28,8 @@ public:
     inline int getHeight() { return m_height; }
     inline std::vector<int> getPosition() { return { m_posX, m_posY }; }
     
+    void render(Frame* frame);
+
     inline void appendChild(UIComponent component) { m_children.push_back(component); }
     
     inline void addType(int type) { m_type |= type; }
@@ -38,6 +41,8 @@ public:
     inline std::string getInnerText() { return m_innerText; }
     inline std::vector<int> getBackgroundColor(int r, int g, int b) { return m_backgroundColor; }
     inline std::vector<int> getBorderColor(int r, int g, int b) { return m_backgroundColor; }
+    inline std::vector<UIComponent> getChildren() { return m_children; }
+
 
 protected:
     int m_width, m_height, m_posX, m_posY;
