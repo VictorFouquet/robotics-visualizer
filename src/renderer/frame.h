@@ -24,7 +24,7 @@ public:
     void addCircleBorder(int x, int y, float r, float width);
     void addLine(int p1x, int p1y, int p2x, int p2y);
     void addPolygon();
-    void addRectangle();
+    void addRectangle(int width, int height, int x, int y, int r, int g, int b);
     void addTriangle();
     void addMessage(std::string message, std::string fontName, int x, int y, int s);
 
