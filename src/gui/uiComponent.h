@@ -49,6 +49,12 @@ public:
     void onEvent(AppEvent e);
     inline void callback() { m_callback(); }
 
+    inline bool isButton() { return (bool)(m_type & BUTTON); }
+    inline bool clicked() { return m_clicked; }
+
+    inline bool isContainer() { return (bool)(m_type & CONTAINER); }
+    inline bool containsText() { return m_innerText.size() > 0; }
+
 protected:
     int m_width, m_height, m_posX, m_posY;
     std::string m_innerText;
@@ -58,4 +64,5 @@ protected:
     std::function<void()> m_callback;
 
     int m_type = 0;
+    bool m_clicked = false;
 };
