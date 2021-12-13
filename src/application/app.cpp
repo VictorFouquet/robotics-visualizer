@@ -115,6 +115,13 @@ Frame App::computeFrameComponents(std::vector<Vector3d> step)
     for (UIComponent component : components)
         component.render(&frame);
 
+    if (m_view == 1)
+        return computeRRFrame(step, frame);
+    return frame;
+}
+
+Frame App::computeRRFrame(std::vector<Vector3d> step, Frame frame)
+{
     frame.addCircle(m_windowWidth / 2 + step[0].x, m_windowHeight / 2 + step[0].y, 10);
     frame.addCircle(m_windowWidth / 2 + step[1].x, m_windowHeight / 2 - step[1].y, 10);
     frame.addCircle(m_windowWidth / 2 + step[2].x, m_windowHeight / 2 - step[2].y, 10);
@@ -143,10 +150,16 @@ void App::handleClick(Vector3d point)
     float deltaX = point.x - m_windowWidth / 2;
     float deltaY = point.y - m_windowHeight / 2;
 
-    float dist = std::sqrt(deltaX * deltaX + deltaY * deltaY);
+    if (m_view == 1)
+        handleRRClick(deltaX, -deltaY);
+}
+
+void App::handleRRClick(float x, float y)
+{
+    float dist = std::sqrt(x * x + y * y);
     if (dist > 50.f && dist < 150.f)
     {
-        std::vector<std::vector<Vector3d>> stepsToRender = m_robot->interpolate(deltaX, -deltaY, 5);
+        std::vector<std::vector<Vector3d>> stepsToRender = m_robot->interpolate(x, y, 5);
         for (auto step : stepsToRender)
         {
             Frame frame = computeFrameComponents(step);
