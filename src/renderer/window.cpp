@@ -86,18 +86,20 @@ void Window::onRender(Frame frame)
         circleBorder.render(m_renderer);
     };
 
-    for (auto line : frame.getLines())
-    {
-        line.render(m_renderer);
-    };
 
     for (auto circle : frame.getCircles())
     {
         circle.render(m_renderer);
     };
 
+    for (auto rectangle : frame.getRectangles())
+        rectangle.render(m_renderer);
+
     for (auto message : frame.getMessages())
         message.render(m_renderer);
+
+    for (auto line : frame.getLines())
+        line.render(m_renderer);
     
     SDL_RenderPresent(m_renderer);
     

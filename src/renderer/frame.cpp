@@ -26,9 +26,11 @@ void Frame::addPolygon()
     
 }
 
-void Frame::addRectangle() 
+void Frame::addRectangle(int width, int height, int x, int y, int r, int g, int b) 
 {
-    
+    Rectangle rectangle(x, y, width, height);
+    rectangle.setColor(r, g, b, 255);
+    m_rectangles.push_back(rectangle);
 }
 
 void Frame::addTriangle() 

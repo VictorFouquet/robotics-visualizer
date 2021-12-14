@@ -1,6 +1,5 @@
 #include "messageBox.h"
 
-#include <SDL2/SDL_ttf.h>
 
 MessageBox::MessageBox(std::string message, std::string fontName, int x, int y, int s)
 {

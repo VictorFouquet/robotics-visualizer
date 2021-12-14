@@ -7,6 +7,7 @@ target_include_directories(app PUBLIC
 )
 
 target_link_libraries(app
+    gui
     renderer
     robotics
 )
