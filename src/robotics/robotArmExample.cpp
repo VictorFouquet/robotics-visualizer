@@ -17,10 +17,10 @@ RevoluteRevolute::RevoluteRevolute(float lenghtLink1, float lenghtLink2, float t
 {
     std::vector<float> links = { phi, theta };
     m_rotations = { theta, phi };
-    rotateJoint(links);
+    actuateJoints(links);
 }
 
-void RevoluteRevolute::rotateJoint(std::vector<float> links) 
+void RevoluteRevolute::actuateJoints(std::vector<float> links) 
 {
     m_rotations = links;
     Matrix m1 = Matrix::rotate(0.f, 0.f, links[0]) * Matrix::translate(m_lenghtLink1, 0.f, 0.f);
@@ -158,7 +158,7 @@ std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(float x, float 
                 roatA = fmod(roatA, 360.f);
             if (roatB < 0.f)
                 roatB = fmod(roatB, 360.f);
-            rotateJoint({ roatA, roatB });
+            actuateJoints({ roatA, roatB });
             stepToRender.push_back(Vector3d(m_joints[1].x, m_joints[1].y, 0.f));
             stepToRender.push_back(Vector3d(m_endEffector.x, m_endEffector.y, 0.f));
             stepToRender.push_back(Vector3d(roatA, roatB, 0.f));
@@ -175,7 +175,7 @@ std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(float x, float 
             phi = fmod(phi, 360.f);
         std::vector<float> rotate = { theta, phi };
         
-        rotateJoint(rotate);
+        actuateJoints(rotate);
     }
     std::vector<Vector3d> stepToRender = { Vector3d(0.f, 0.f, 0.f) };
     stepToRender.push_back(Vector3d(m_joints[1].x, m_joints[1].y, 0.f));
@@ -184,4 +184,38 @@ std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(float x, float 
     retData.push_back(stepToRender);
 
     return retData;
+}
+
+
+
+RevolutePrismatic::RevolutePrismatic(float lenghtLink1, float lenghtLink2, float phi, float delta, float weightLink1, float weightLink2) 
+    : m_lenghtLink1(lenghtLink1), m_lenghtLink2(lenghtLink2), m_delta(delta), m_phi(phi), m_weightLink1(weightLink1), m_weightLink2(weightLink2)
+{    
+    std::vector<float> links = { delta, phi };
+    m_rotations = { delta, phi };
+    actuateJoints(links);
+}
+
+void RevolutePrismatic::actuateJoints(std::vector<float>) 
+{
+}
+
+std::vector<float> RevolutePrismatic::inverseKinematics(float x, float y) 
+{
+    return {};
+}
+
+std::vector<std::vector<float>> RevolutePrismatic::getDeltasBetweenPoses(float x, float y) 
+{
+    return {};
+}
+
+std::vector<std::vector<Vector3d>> RevolutePrismatic::interpolate(float x, float y, int step) 
+{
+    return {};
+}
+
+bool RevolutePrismatic::compareDelta(std::vector<float> a, std::vector<float> b) 
+{
+    return true;
 }
