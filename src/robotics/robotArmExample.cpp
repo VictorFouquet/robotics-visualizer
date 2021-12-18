@@ -262,7 +262,54 @@ std::vector<std::vector<float>> RevolutePrismatic::getDeltasBetweenPoses(float x
 
 std::vector<std::vector<Vector3d>> RevolutePrismatic::interpolate(float x, float y, int step) 
 {
-    return {};
+    std::vector<std::vector<Vector3d>> retData = { };
+
+    std::vector<std::vector<float>> deltas = getDeltasBetweenPoses(x, y);
+
+    float phi = m_rotations[0], delta = m_rotations[1];
+
+    float deltaT = deltas[0][0], deltaD = deltas[0][1];
+    float maxDelta = std::max(std::abs(deltaT), std::abs(deltaD));
+    
+    float unitDeltaP = deltaT / maxDelta;
+    float unitDeltaD = deltaD / maxDelta;
+
+    for (int i = 0; i < (int)maxDelta; i++)
+    {
+        if (i%step == 0)
+        {
+            std::vector<Vector3d> stepToRender = { Vector3d(0.f, 0.f, 0.f) };
+
+            float roatA = m_rotations[0] + unitDeltaP;
+            float roatB = m_rotations[1] + unitDeltaD;
+            if (roatA < 0.f)
+                roatA += 360.f;
+            if (roatA > 360.f)
+                roatA = fmod(roatA, 360.f);
+
+            actuateJoints({ roatA, roatB });
+            stepToRender.push_back(Vector3d(m_joints[1].x, m_joints[1].y, 0.f));
+            stepToRender.push_back(Vector3d(m_endEffector.x, m_endEffector.y, 0.f));
+            stepToRender.push_back(Vector3d(roatA, roatB, 0.f));
+            retData.push_back(stepToRender);
+        }
+        phi += unitDeltaP;
+        delta += unitDeltaD;
+
+        if (phi < 0) phi += 360.f;
+        if (phi > 360.f)
+            phi = fmod(phi, 360.f);
+        std::vector<float> rotate = { phi, delta };
+        
+        actuateJoints(rotate);
+    }
+    std::vector<Vector3d> stepToRender = { Vector3d(0.f, 0.f, 0.f) };
+    stepToRender.push_back(Vector3d(m_joints[1].x, m_joints[1].y, 0.f));
+    stepToRender.push_back(Vector3d(m_endEffector.x, m_endEffector.y, 0.f));
+    stepToRender.push_back(Vector3d(phi, delta, 0.f));
+    retData.push_back(stepToRender);
+
+    return retData;
 }
 
 bool RevolutePrismatic::compareDelta(std::vector<float> a, std::vector<float> b) 
