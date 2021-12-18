@@ -23,6 +23,8 @@ private:
 
     Frame computeRRFrame(std::vector<Vector3d> step, Frame frame) ;
     void handleRRClick(float x, float y);
+
+    Frame computeRPFrame(std::vector<Vector3d> step, Frame frame) ;
 private:
     int m_windowWidth = 800, m_windowHeight = 600;
     Window m_window =  Window(m_windowWidth, m_windowHeight);
