@@ -237,7 +237,27 @@ std::vector<float> RevolutePrismatic::inverseKinematics(float x, float y)
 
 std::vector<std::vector<float>> RevolutePrismatic::getDeltasBetweenPoses(float x, float y) 
 {
-    return {};
+    std::vector<float> values = inverseKinematics(x, y);
+
+    float dp1 = values[0] - m_rotations[0];
+    float dp2 = values[0] - m_rotations[0] - 360.f;
+    float dd  = values[1] - m_rotations[1];
+
+    if (m_joints[1].y < 0)
+    {
+        dp1 = 360 - m_rotations[0] + values[0];
+        dp2 = -360.f + dp1;
+    }
+
+    std::vector<std::vector<float>> deltas = {
+        { dp1, dd },
+        { dp2, dd },
+    };
+
+    if (std::abs(deltas[0][0]) > std::abs(deltas[1][0]))
+        std::swap(deltas[0], deltas[1]);
+
+    return deltas;
 }
 
 std::vector<std::vector<Vector3d>> RevolutePrismatic::interpolate(float x, float y, int step) 
