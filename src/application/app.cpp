@@ -1,5 +1,5 @@
 #include "app.h"
-#include "robotArmExample.h"
+#include "robotArm.h"
 #include <algorithm>
 
 
@@ -9,87 +9,9 @@ int App::run()
     m_gui.init(m_windowWidth, m_windowHeight);
     createGUI();
 
-
-    RevoluteRevolute derivedRR = RevoluteRevolute(100.f, 50.f, 0.f, 0.f, 20.f, 1.f);
-    RevolutePrismatic derivedRP = RevolutePrismatic(75.f, 10.f, 0.f, 0.f, 1.f, 1.f);
-
     while(m_window.isOpened())
     {
-        if (m_view == 1)
-        {
-            m_robot = &derivedRR;
-            if (!m_RRActivated)
-            {
-                m_RRActivated = true;
-                std::vector<Vector3d> baseFrame = { 
-                    Vector3d(0.f, 0.f, 0.f),
-                    Vector3d(100.f, 0.f, 0.f),
-                    Vector3d(150.f, 0.f, 0.f),
-                    Vector3d(0.f, 0.f, 0.f)
-                };
-                Frame frame = computeFrameComponents(baseFrame);
-
-
-                m_frames.push_back(frame);
-
-                m_frameToRender++;
-            }
-            else
-            {
-                std::vector<Vector3d> joints = m_robot->getJoints();
-                
-                Vector3d ef = m_robot->getEndEffector();
-
-                std::vector<Vector3d> baseFrame = { 
-                    joints[0],
-                    joints[1],
-                    ef
-                };
-                Frame frame = computeFrameComponents(baseFrame);
-
-
-                m_frames.push_back(frame);
-
-                m_frameToRender++;
-            }
-        }
-        else if (m_view == 2)
-        {
-            m_robot = &derivedRP;
-            if (!m_RPActivated)
-            {
-                m_RPActivated = true;
-                std::vector<Vector3d> baseFrame = { 
-                    Vector3d(0.f, 0.f, 0.f),
-                    Vector3d(75.f, 0.f, 0.f),
-                    Vector3d(85.f, 0.f, 0.f)
-                };
-                Frame frame = computeFrameComponents(baseFrame);
-
-
-                m_frames.push_back(frame);
-
-                m_frameToRender++;
-            }
-            else
-            {
-                std::vector<Vector3d> joints = m_robot->getJoints();
-                
-                Vector3d ef = m_robot->getEndEffector();
-
-                std::vector<Vector3d> baseFrame = { 
-                    joints[0],
-                    joints[1],
-                    ef
-                };
-                Frame frame = computeFrameComponents(baseFrame);
-
-
-                m_frames.push_back(frame);
-
-                m_frameToRender++;
-            }
-        }
+        updateRobot();
 
         AppEvent event = { .clickCoord = { -1.f, -1.f }, .keyCode = -1 };
         // Handle events from window
@@ -180,6 +102,25 @@ Frame App::computeFrameComponents(std::vector<Vector3d> step)
     else if (m_view == 2)
         return computeRPFrame(step, frame);
     return frame;
+}
+
+void App::computeRobotBaseFrame() 
+{
+    std::vector<Vector3d> joints = m_robot->getJoints();
+        
+    Vector3d ef = m_robot->getEndEffector();
+
+    std::vector<Vector3d> baseFrame = { 
+        joints[0],
+        joints[1],
+        ef
+    };
+    Frame frame = computeFrameComponents(baseFrame);
+
+
+    m_frames.push_back(frame);
+
+    m_frameToRender++;
 }
 
 Frame App::computeRRFrame(std::vector<Vector3d> step, Frame frame)
@@ -279,4 +220,57 @@ void App::handleRPClick(float x, float y)
             m_frames.push_back(frame);
         }
     }
+}
+
+void App::updateRobot() 
+{
+    if (m_view == 1)
+        updateRR();
+    else if (m_view == 2)
+       updateRP();
+}
+
+void App::updateRR() 
+{
+    m_robot = &m_derivedRR;
+    if (!m_RRActivated)
+    {
+        m_RRActivated = true;
+        std::vector<Vector3d> baseFrame = { 
+            Vector3d(0.f, 0.f, 0.f),
+            Vector3d(100.f, 0.f, 0.f),
+            Vector3d(150.f, 0.f, 0.f),
+            Vector3d(0.f, 0.f, 0.f)
+        };
+        Frame frame = computeFrameComponents(baseFrame);
+
+
+        m_frames.push_back(frame);
+
+        m_frameToRender++;
+    }
+    else
+        computeRobotBaseFrame();
+}
+
+void App::updateRP() 
+{
+    m_robot = &m_derivedRP;
+    if (!m_RPActivated)
+    {
+        m_RPActivated = true;
+        std::vector<Vector3d> baseFrame = { 
+            Vector3d(0.f, 0.f, 0.f),
+            Vector3d(75.f, 0.f, 0.f),
+            Vector3d(85.f, 0.f, 0.f)
+        };
+        Frame frame = computeFrameComponents(baseFrame);
+
+
+        m_frames.push_back(frame);
+
+        m_frameToRender++;
+    }
+    else
+        computeRobotBaseFrame();
 }
