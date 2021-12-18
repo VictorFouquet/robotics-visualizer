@@ -23,8 +23,9 @@ private:
 
     Frame computeRRFrame(std::vector<Vector3d> step, Frame frame) ;
     void handleRRClick(float x, float y);
-
+    
     Frame computeRPFrame(std::vector<Vector3d> step, Frame frame) ;
+    void handleRPClick(float x, float y);
 private:
     int m_windowWidth = 800, m_windowHeight = 600;
     Window m_window =  Window(m_windowWidth, m_windowHeight);
@@ -35,4 +36,7 @@ private:
     
     GUI m_gui = GUI();
     RobotArm* m_robot;
+
+    bool m_RRActivated = false;
+    bool m_RPActivated = false;
 };
