@@ -219,7 +219,20 @@ void RevolutePrismatic::actuateJoints(std::vector<float> links)
 
 std::vector<float> RevolutePrismatic::inverseKinematics(float x, float y) 
 {
-    return {};
+    Vector3d endEffectorVector = Vector3d(x, y);
+
+    float phi = Vector3d(1.f, 0.f).angleToVector(endEffectorVector) * 180.f / 3.14;
+
+    if (endEffectorVector.y < 0)
+    {
+        phi = 360.f - phi;
+    }
+
+    float delta = endEffectorVector.magnitude() - m_lenghtLink1 - m_lenghtLink2;
+
+    std::vector<float> values = { phi, delta };
+
+    return values;
 }
 
 std::vector<std::vector<float>> RevolutePrismatic::getDeltasBetweenPoses(float x, float y) 
