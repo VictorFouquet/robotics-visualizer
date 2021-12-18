@@ -19,7 +19,7 @@ public:
     std::vector<std::pair<Vector3d, Vector3d>> getLinks() const { return m_links; }
     std::vector<Vector3d> getJoints() const { return m_joints; }
 
-    virtual void rotateJoint(std::vector<float>) {};
+    virtual void actuateJoints(std::vector<float>) {};
     virtual std::vector<float> inverseKinematics(float x, float y) { return {}; }
     virtual std::vector<float> getRotations() const { return m_rotations; }
     virtual std::vector<std::vector<float>> getDeltasBetweenPoses(float x, float y) { return {}; }
@@ -39,7 +39,7 @@ public:
     RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi, float weightLink1=1.f, float weightLink2=1.f);
     ~RevoluteRevolute() = default;
 
-    virtual void rotateJoint(std::vector<float>) override;
+    virtual void actuateJoints(std::vector<float>) override;
 
     void rotateLink(int link, int theta);
     virtual std::vector<float> inverseKinematics(float x, float y) override;
@@ -50,4 +50,22 @@ private:
     static bool compareDelta(std::vector<float> a, std::vector<float> b);
 private:
     float m_lenghtLink1, m_lenghtLink2, m_theta, m_phi, m_weightLink1, m_weightLink2;
+};
+
+class RevolutePrismatic : public RobotArm
+{
+public:
+    RevolutePrismatic(float lenghtLink1, float lenghtLink2, float phi, float delta, float weightLink1=1.f, float weightLink2=1.f);
+    ~RevolutePrismatic() = default;
+
+    virtual void actuateJoints(std::vector<float>) override;
+
+    virtual std::vector<float> inverseKinematics(float x, float y) override;
+    virtual std::vector<std::vector<float>> getDeltasBetweenPoses(float x, float y) override;
+    virtual std::vector<std::vector<Vector3d>> interpolate(float x, float y, int step) override;
+
+private:
+    static bool compareDelta(std::vector<float> a, std::vector<float> b);
+private:
+    float m_lenghtLink1, m_lenghtLink2, m_phi, m_delta, m_weightLink1, m_weightLink2;
 };

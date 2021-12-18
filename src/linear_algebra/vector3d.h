@@ -2,6 +2,11 @@
 
 #include <iostream>
 #include <math.h>
+#include <vector>
+
+#ifndef EPSILON
+#define EPSILON 1.19209e-7
+#endif
 
 class Vector3d
 {
@@ -30,6 +35,10 @@ public:
     inline float angleToVector(Vector3d v) { float x = dot(v) / (magnitude() * v.magnitude()); return std::acos(x > 1.f ? 1.f : x < -1.f ? -1.f : x); }
 
     int orientation(Vector3d q, Vector3d r);
+
+    // TODO: ONLY WORKS FOR 2D VECTORS AT THE MOMENT
+    std::vector<Vector3d> normals() { return { Vector3d(-y, x, 0.f), Vector3d(y, -x, 0.f) }; }
+    Vector3d unit() { float m = magnitude(); return m > EPSILON ? (Vector3d(x, y, z) / magnitude()) : Vector3d(); }
 
     inline void print() const { std::cout << "{ " << x << ", " << y << ", " << z << ", " << w << " }" << std::endl; }
 public:
