@@ -1,5 +1,6 @@
 add_library(robotics
-    robotArmExample.cpp
+    revolutePrismatic.cpp
+    revoluteRevolute.cpp
 )
 
 target_include_directories(robotics PUBLIC

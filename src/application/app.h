@@ -2,7 +2,11 @@
 
 #include "gui.h"
 #include "window.h"
-#include "robotArmExample.h"
+
+#include "robotArm.h"
+#include "revoluteRevolute.h"
+#include "revolutePrismatic.h"
+
 #include "uiComponent.h"
 #include <vector>
 
