@@ -1,5 +1,5 @@
 #include "app.h"
-#include "robotArmExample.h"
+#include "robotArm.h"
 #include <algorithm>
 
 
@@ -9,27 +9,9 @@ int App::run()
     m_gui.init(m_windowWidth, m_windowHeight);
     createGUI();
 
-
-    RevoluteRevolute derivedRR = RevoluteRevolute(100.f, 50.f, 0.f, 0.f, 20.f, 1.f);
-
     while(m_window.isOpened())
     {
-        if (m_view == 1 && !m_robot)
-        {
-            m_robot = &derivedRR;
-            std::vector<Vector3d> baseFrame = { 
-                Vector3d(0.f, 0.f, 0.f),
-                Vector3d(100.f, 0.f, 0.f),
-                Vector3d(150.f, 0.f, 0.f),
-                Vector3d(0.f, 0.f, 0.f)
-            };
-            Frame frame = computeFrameComponents(baseFrame);
-
-
-            m_frames.push_back(frame);
-
-            m_frameToRender++;
-        }
+        updateRobot();
 
         AppEvent event = { .clickCoord = { -1.f, -1.f }, .keyCode = -1 };
         // Handle events from window
@@ -74,13 +56,13 @@ void App::createGUI()
     robot1Btn.setBorderColor(255, 255, 255, 255);
     robot1Btn.setCallback([this]() mutable { this->m_view = 1; });
 
-    UIComponent robot2Btn = m_gui.createButton("Prismatic-Revolute", 0, 36, 150, 26);
+    UIComponent robot2Btn = m_gui.createButton("Revolute-Prismatic", 0, 36, 150, 26);
     robot2Btn.setBorderColor(255, 255, 255, 255);
-    robot2Btn.setCallback([msg=robot2Btn.getInnerText()]() { std::cout << msg << std::endl; });
+    robot2Btn.setCallback([this]() mutable { this->m_view = 2; });
 
-    UIComponent robot3Btn = m_gui.createButton("Revolute-Prismatic", 0, 62, 150, 26);
+    UIComponent robot3Btn = m_gui.createButton("Prismatic-Revolute", 0, 62, 150, 26);
     robot3Btn.setBorderColor(255, 255, 255, 255);
-    robot3Btn.setCallback([msg=robot3Btn.getInnerText()]() { std::cout << msg << std::endl; });
+    robot3Btn.setCallback([msg=robot2Btn.getInnerText()]() { std::cout << msg << std::endl; });
 
     robotTypesMenu.appendChild(robot1Btn);
     robotTypesMenu.appendChild(robot2Btn);
@@ -117,7 +99,28 @@ Frame App::computeFrameComponents(std::vector<Vector3d> step)
 
     if (m_view == 1)
         return computeRRFrame(step, frame);
+    else if (m_view == 2)
+        return computeRPFrame(step, frame);
     return frame;
+}
+
+void App::computeRobotBaseFrame() 
+{
+    std::vector<Vector3d> joints = m_robot->getJoints();
+        
+    Vector3d ef = m_robot->getEndEffector();
+
+    std::vector<Vector3d> baseFrame = { 
+        joints[0],
+        joints[1],
+        ef
+    };
+    Frame frame = computeFrameComponents(baseFrame);
+
+
+    m_frames.push_back(frame);
+
+    m_frameToRender++;
 }
 
 Frame App::computeRRFrame(std::vector<Vector3d> step, Frame frame)
@@ -145,6 +148,41 @@ Frame App::computeRRFrame(std::vector<Vector3d> step, Frame frame)
     return frame;
 }
 
+Frame App::computeRPFrame(std::vector<Vector3d> step, Frame frame)
+{
+    frame.addCircle(m_windowWidth / 2 + step[0].x, m_windowHeight / 2 + step[0].y, 10);
+
+    frame.addCircle(m_windowWidth / 2 + step[2].x, m_windowHeight / 2 - step[2].y, 10);
+    frame.addLine(
+        m_windowWidth / 2 + step[0].x, m_windowHeight / 2 + step[0].x,
+        m_windowWidth / 2 + step[1].x, m_windowHeight / 2 - step[1].y
+    );
+    frame.addLine(
+        m_windowWidth / 2 + step[1].x, m_windowHeight / 2 - step[1].y,
+        m_windowWidth / 2 + step[2].x, m_windowHeight / 2 - step[2].y
+    );
+
+    std::vector<Vector3d> prismaticJoint = step[1].normals();
+
+    prismaticJoint[0] = prismaticJoint[0].unit() * 10 + step[1];
+    prismaticJoint[1] = prismaticJoint[1].unit() * 10 + step[1];
+
+    frame.addLine(
+        m_windowWidth / 2 + prismaticJoint[0].x, m_windowHeight / 2 - prismaticJoint[0].y,
+        m_windowWidth / 2 + prismaticJoint[1].x, m_windowHeight / 2 - prismaticJoint[1].y
+    );
+
+    int i = 1;
+    frame.addMessage("a1: " + std::to_string(step[3].x), "roboto.ttf", 500, 100 + i * 15, 12);
+    i++;
+    frame.addMessage("a2: " + std::to_string(step[3].y), "roboto.ttf", 500, 100 + i * 15, 12);
+    i++;
+    
+    frame.addCircleBorder(m_windowWidth / 2, m_windowHeight / 2, 150.f, 65.f);
+    
+    return frame;
+}
+
 void App::handleClick(Vector3d point) 
 {
     float deltaX = point.x - m_windowWidth / 2;
@@ -152,6 +190,8 @@ void App::handleClick(Vector3d point)
 
     if (m_view == 1)
         handleRRClick(deltaX, -deltaY);
+    if (m_view == 2)
+        handleRPClick(deltaX, -deltaY);
 }
 
 void App::handleRRClick(float x, float y)
@@ -166,4 +206,71 @@ void App::handleRRClick(float x, float y)
             m_frames.push_back(frame);
         }
     }
+}
+
+void App::handleRPClick(float x, float y) 
+{
+    float dist = std::sqrt(x * x + y * y);
+    if (dist > 85.f && dist < 150.f)
+    {
+        std::vector<std::vector<Vector3d>> stepsToRender = m_robot->interpolate(x, y, 5);
+        for (auto step : stepsToRender)
+        {
+            Frame frame = computeFrameComponents(step);
+            m_frames.push_back(frame);
+        }
+    }
+}
+
+void App::updateRobot() 
+{
+    if (m_view == 1)
+        updateRR();
+    else if (m_view == 2)
+       updateRP();
+}
+
+void App::updateRR() 
+{
+    m_robot = &m_derivedRR;
+    if (!m_RRActivated)
+    {
+        m_RRActivated = true;
+        std::vector<Vector3d> baseFrame = { 
+            Vector3d(0.f, 0.f, 0.f),
+            Vector3d(100.f, 0.f, 0.f),
+            Vector3d(150.f, 0.f, 0.f),
+            Vector3d(0.f, 0.f, 0.f)
+        };
+        Frame frame = computeFrameComponents(baseFrame);
+
+
+        m_frames.push_back(frame);
+
+        m_frameToRender++;
+    }
+    else
+        computeRobotBaseFrame();
+}
+
+void App::updateRP() 
+{
+    m_robot = &m_derivedRP;
+    if (!m_RPActivated)
+    {
+        m_RPActivated = true;
+        std::vector<Vector3d> baseFrame = { 
+            Vector3d(0.f, 0.f, 0.f),
+            Vector3d(75.f, 0.f, 0.f),
+            Vector3d(85.f, 0.f, 0.f)
+        };
+        Frame frame = computeFrameComponents(baseFrame);
+
+
+        m_frames.push_back(frame);
+
+        m_frameToRender++;
+    }
+    else
+        computeRobotBaseFrame();
 }
