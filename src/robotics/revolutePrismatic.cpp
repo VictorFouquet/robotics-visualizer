@@ -12,8 +12,10 @@ static float rad(float n)
 }
 
 RevolutePrismatic::RevolutePrismatic(float lenghtLink1, float lenghtLink2, float phi, float delta, float weightLink1, float weightLink2) 
-    : m_lenghtLink1(lenghtLink1), m_lenghtLink2(lenghtLink2), m_delta(delta), m_phi(phi), m_weightLink1(weightLink1), m_weightLink2(weightLink2)
-{    
+    : m_delta(delta), m_phi(phi), m_weightLink1(weightLink1), m_weightLink2(weightLink2)
+{   
+    m_lengthLink1 = lenghtLink1;
+    m_lengthLink2 = lenghtLink2;
     std::vector<float> links = { delta, phi };
     m_rotations = { delta, phi };
     actuateJoints(links);
@@ -22,8 +24,8 @@ RevolutePrismatic::RevolutePrismatic(float lenghtLink1, float lenghtLink2, float
 void RevolutePrismatic::actuateJoints(std::vector<float> links) 
 {
     m_rotations = links;
-    Matrix m1 = Matrix::rotate(0.f, 0.f, links[0]) * Matrix::translate(m_lenghtLink1, 0.f, 0.f);
-    Matrix m2 = Matrix::rotate(0.f, 0.f, 0.f) * Matrix::translate(m_lenghtLink2 + links[1], 0.f, 0.f);
+    Matrix m1 = Matrix::rotate(0.f, 0.f, links[0]) * Matrix::translate(m_lengthLink1, 0.f, 0.f);
+    Matrix m2 = Matrix::rotate(0.f, 0.f, 0.f) * Matrix::translate(m_lengthLink2 + links[1], 0.f, 0.f);
     Matrix m3 = m1 * m2;
 
     Vector3d p1(0.f, 0.f, 0.f);
@@ -51,7 +53,7 @@ std::vector<float> RevolutePrismatic::inverseKinematics(float x, float y)
         phi = 360.f - phi;
     }
 
-    float delta = endEffectorVector.magnitude() - m_lenghtLink1 - m_lenghtLink2;
+    float delta = endEffectorVector.magnitude() - m_lengthLink1 - m_lengthLink2;
 
     std::vector<float> values = { phi, delta };
 

@@ -17,6 +17,7 @@ public:
     Vector3d getEndEffector() const { return m_endEffector; }
 
     std::vector<std::pair<Vector3d, Vector3d>> getLinks() const { return m_links; }
+    std::vector<float> getLinksLengths() const { return { m_lengthLink1, m_lengthLink2 }; }
     std::vector<Vector3d> getJoints() const { return m_joints; }
 
     virtual void actuateJoints(std::vector<float>) {};
@@ -26,6 +27,7 @@ public:
     virtual std::vector<std::vector<Vector3d>> interpolate(float x, float y, int step) { return {}; }
 
 protected:
+    float m_lengthLink1, m_lengthLink2;
     std::vector<Matrix> m_transforms;
     std::vector<Vector3d> m_joints;
     std::vector<std::pair<Vector3d, Vector3d>> m_links;

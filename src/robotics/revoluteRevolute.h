@@ -18,5 +18,5 @@ public:
 private:
     static bool compareDelta(std::vector<float> a, std::vector<float> b);
 private:
-    float m_lenghtLink1, m_lenghtLink2, m_theta, m_phi, m_weightLink1, m_weightLink2;
+    float m_theta, m_phi, m_weightLink1, m_weightLink2;
 };
