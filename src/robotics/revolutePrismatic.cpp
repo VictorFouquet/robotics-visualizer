@@ -11,9 +11,12 @@ static float rad(float n)
     return 2 * PI * (n / 360);
 }
 
-RevolutePrismatic::RevolutePrismatic(float lenghtLink1, float lenghtLink2, float phi, float delta, float weightLink1, float weightLink2) 
+RevolutePrismatic::RevolutePrismatic(float lenghtLink1, float lenghtLink2, float phi, float delta,
+        float maxJoint1, float maxJoint2, float weightLink1, float weightLink2) 
     : m_delta(delta), m_phi(phi), m_weightLink1(weightLink1), m_weightLink2(weightLink2)
-{   
+{
+    m_maxJoint1 = maxJoint1;
+    m_maxJoint2 = maxJoint2;
     m_lengthLink1 = lenghtLink1;
     m_lengthLink2 = lenghtLink2;
     std::vector<float> links = { delta, phi };

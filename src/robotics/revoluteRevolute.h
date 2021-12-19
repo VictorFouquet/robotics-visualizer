@@ -5,7 +5,8 @@
 class RevoluteRevolute : public RobotArm
 {
 public:
-    RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi, float weightLink1=1.f, float weightLink2=1.f);
+    RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi,
+        float maxJoint1=1.f, float maxJoint2=1.f, float weightLink1=1.f, float weightLink2=1.f);
     ~RevoluteRevolute() = default;
 
     virtual void actuateJoints(std::vector<float>) override;

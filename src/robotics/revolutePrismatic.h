@@ -5,7 +5,8 @@
 class RevolutePrismatic : public RobotArm
 {
 public:
-    RevolutePrismatic(float lenghtLink1, float lenghtLink2, float phi, float delta, float weightLink1=1.f, float weightLink2=1.f);
+    RevolutePrismatic(float lenghtLink1, float lenghtLink2, float phi, float delta,
+        float maxJoint1=1.f, float maxJoint2=1.f,  float weightLink1=1.f, float weightLink2=1.f);
     ~RevolutePrismatic() = default;
 
     virtual void actuateJoints(std::vector<float>) override;
