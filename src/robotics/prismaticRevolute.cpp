@@ -76,7 +76,28 @@ std::vector<std::vector<float>> PrismaticRevolute::getDeltasBetweenPoses(float x
 {
     std::vector<float> values = inverseKinematics(x, y);
 
-    return {};
+    float dd1  = values[0] - m_rotations[0];
+    float dp1A = values[1] - m_rotations[1];
+    float dp1B = values[1] - m_rotations[1] - 360.f;
+    float dd2  = values[2] - m_rotations[0];
+    float dp2A = values[3] - m_rotations[1];
+    float dp2B = values[3] - m_rotations[1] - 360.f;
+
+    std::vector<std::vector<float>> deltas = {};
+
+    if ((values[0] + m_lengthLink1) < m_lengthLink1 + m_maxJoint1)
+    {
+        deltas.push_back({ dd1, dp1A, std::abs(dd1) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 });
+        deltas.push_back({ dd1, dp1B, std::abs(dd1) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 });
+    }
+    if ((values[2] + m_lengthLink1) < m_lengthLink1 + m_maxJoint1)
+    {
+        deltas.push_back({ dd2, dp2A, std::abs(dd2) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 });
+        deltas.push_back({ dd2, dp2B, std::abs(dd2) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 });
+    }
+    std::sort(deltas.begin(), deltas.end(), compareDelta);
+
+    return deltas;
 }
 
 std::vector<std::vector<Vector3d>> PrismaticRevolute::interpolate(float x, float y, int step) 
