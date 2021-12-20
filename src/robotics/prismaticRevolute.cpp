@@ -47,7 +47,29 @@ void PrismaticRevolute::actuateJoints(std::vector<float> links)
 
 std::vector<float> PrismaticRevolute::inverseKinematics(float x, float y) 
 {
-    return {};
+    Vector3d origin = Vector3d(0.f, 0.f), endEffectorVector = Vector3d(x, y), ip1 = Vector3d(), ip2 = Vector3d();
+
+    Geometry::Circle c = Geometry::Circle(m_lengthLink2, endEffectorVector);
+    c.getIntersectionPointsWithSegment(origin, Vector3d(0.f, 1000.f), ip1, ip2);
+
+    Vector3d u = endEffectorVector - ip1;
+    Vector3d v = endEffectorVector - ip2;
+
+    float phi1 = Vector3d(0.f, 1.f).angleToVector(u) * 180.f / 3.14;
+    float phi2 = Vector3d(0.f, 1.f).angleToVector(v) * 180.f / 3.14;
+
+    if (endEffectorVector.x > 0)
+    {
+        phi1 = 360.f - phi1;
+        phi2 = 360.f - phi2;
+    }
+
+    float delta1 = ip1.y - m_lengthLink1;
+    float delta2 = ip2.y - m_lengthLink1;
+
+    std::vector<float> values = { delta1, phi1, delta2, phi2 };
+
+    return values;
 }
 
 std::vector<std::vector<float>> PrismaticRevolute::getDeltasBetweenPoses(float x, float y) 
