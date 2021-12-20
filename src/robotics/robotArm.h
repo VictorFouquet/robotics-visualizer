@@ -1,11 +1,16 @@
 #pragma once
 
-#include "vector3d.h"
-#include "matrix.h"
 #include <iostream>
 #include <stdlib.h>
 #include <vector>
 #include <tuple>
+
+#include "joint.h"
+#include "link.h"
+
+#include "vector3d.h"
+#include "matrix.h"
+
 
 class RobotArm
 {
