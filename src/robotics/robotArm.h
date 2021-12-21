@@ -8,6 +8,8 @@
 #include "vector3d.h"
 #include "matrix.h"
 
+#include "armComponent.h"
+
 
 class RobotArm
 {
@@ -29,6 +31,7 @@ public:
     virtual std::vector<std::vector<float>> getDeltasBetweenPoses(float x, float y) { return {}; }
     virtual std::vector<std::vector<Vector3d>> interpolate(float x, float y, int step) { return {}; }
 
+    std::vector<ArmComponent> m_components;
 protected:
     float m_lengthLink1, m_lengthLink2;
     float m_maxJoint1, m_maxJoint2;
@@ -37,4 +40,5 @@ protected:
     std::vector<std::pair<Vector3d, Vector3d>> m_links;
     std::vector<float> m_rotations;
     Vector3d m_endEffector;
+
 };

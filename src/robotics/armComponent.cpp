@@ -1,5 +1,16 @@
 #include "armComponent.h"
 
+ArmComponent::ArmComponent(
+    Vector3d translate, Vector3d rotate, std::vector<Vector3d> points,
+    ArmComponentType type, std::shared_ptr<ArmComponent> parent
+) : m_translation(translate), m_rotation(rotate), m_points(points)
+{
+    m_parent = parent;
+    setType(type);
+    setLocalTransform();
+    setGlobalTransform();
+}
+
 void ArmComponent::setLocalTransform() 
 {
     Matrix r = Matrix::rotate(m_rotation.x, m_rotation.y, m_rotation.z);
@@ -11,7 +22,7 @@ void ArmComponent::setLocalTransform()
 void ArmComponent::setGlobalTransform() 
 {
     Matrix transform = m_localTransform;
-    ArmComponent* current = m_parent;
+    std::shared_ptr<ArmComponent> current = m_parent;
     while (current)
     {
         transform = current->getLocalTransform() * transform;
@@ -23,11 +34,16 @@ void ArmComponent::setGlobalTransform()
 
 std::vector<Vector3d> ArmComponent::getTransformedPoints() 
 {
-    Matrix transform = m_parent->getGlobalTransform();
     std::vector<Vector3d> updated = {};
+    Matrix transform;
+
+    if (m_parent)
+        transform = m_parent->getGlobalTransform();
+    else
+        transform = m_localTransform;
 
     for (auto p : m_points)
         updated.push_back((transform * p));
-    
+
     return updated;
 }

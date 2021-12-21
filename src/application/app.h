@@ -41,6 +41,7 @@ private:
     void updateRP();
     void updatePR();
 
+    void createRobots();
 private:
     int m_windowWidth = 800, m_windowHeight = 600;
     Window m_window =  Window(m_windowWidth, m_windowHeight);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 
 #include "vector3d.h"
 #include "matrix.h"
@@ -8,28 +9,39 @@
 
 enum ArmComponentType 
 {
-    revolute  = 1,
-    prismatic = 2,
-    joint     = 3,
-    ground    = 8,
-    link      = 32
+    revolute    = 1,
+    prismatic   = 2,
+    joint       = 3,
+    ground      = 8,
+    rigidBody   = 16,
+    endEffector = 32,
+    link        = 56
 };
 
 class ArmComponent
 {
 public:
     ArmComponent() = default;
-    ArmComponent(Vector3d translate, Vector3d rotate);
+    ArmComponent(Vector3d translate, Vector3d rotate)
+        : m_translation(translate), m_rotation(rotate) { setLocalTransform(); }
+
+    ArmComponent(
+        Vector3d translate,
+        Vector3d rotate,
+        std::vector<Vector3d> points,
+        ArmComponentType type,
+        std::shared_ptr<ArmComponent> parent=nullptr
+    );
 
     ~ArmComponent() = default;
 
     inline void setType(ArmComponentType type) { m_type |= type; }
     inline bool isType(ArmComponentType type) { return (m_type & type); }
 
-    inline void setChild(ArmComponent* child) { m_child = child; }
-    inline void setParent(ArmComponent* parent) { m_parent = parent; }
-    inline ArmComponent* getChild() { return m_child; }
-    inline ArmComponent* getParent() { return m_parent; }
+    inline void setChild(std::shared_ptr<ArmComponent> child) { m_child = child; }
+    inline void setParent(std::shared_ptr<ArmComponent> parent) { m_parent = parent; }
+    inline std::shared_ptr<ArmComponent> getChild() { return m_child; }
+    inline std::shared_ptr<ArmComponent> getParent() { return m_parent; }
 
     inline void setTranslation(Vector3d translate) { m_translation = translate; }
     inline void setRotation(Vector3d rotate) { m_rotation = rotate; }
@@ -45,8 +57,8 @@ public:
 
 private:
     int m_type = 0;
-    ArmComponent* m_parent;
-    ArmComponent* m_child;
+    std::shared_ptr<ArmComponent> m_parent = nullptr;
+    std::shared_ptr<ArmComponent> m_child = nullptr;
 
     std::vector<Vector3d> m_points;
     Vector3d m_translation;

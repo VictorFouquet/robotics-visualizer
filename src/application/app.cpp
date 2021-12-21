@@ -1,14 +1,15 @@
 #include "app.h"
 #include "robotArm.h"
 #include <algorithm>
-
+#include <memory>
 
 int App::run()
 {
     init();
     m_gui.init(m_windowWidth, m_windowHeight);
     createGUI();
-
+    createRobots();
+    
     while(m_window.isOpened())
     {
         updateRobot();
@@ -127,6 +128,13 @@ void App::computeRobotBaseFrame()
 
 Frame App::computeRRFrame(std::vector<Vector3d> step, Frame frame)
 {
+    for (auto c : m_derivedRR.m_components)
+    {
+        std::vector<Vector3d> ps = c.getTransformedPoints();
+        for (auto p: ps)
+            p.print();
+    }
+    
     frame.addCircle(m_windowWidth / 2 + step[0].x, m_windowHeight / 2 + step[0].y, 10);
     frame.addCircle(m_windowWidth / 2 + step[1].x, m_windowHeight / 2 - step[1].y, 10);
     frame.addCircle(m_windowWidth / 2 + step[2].x, m_windowHeight / 2 - step[2].y, 10);
@@ -386,4 +394,76 @@ void App::updatePR()
     }
     else
         computeRobotBaseFrame();
+}
+
+void App::createRobots() 
+{
+    ArmComponent ground = ArmComponent(
+        Vector3d(),
+        Vector3d(),
+        { Vector3d() },
+        ArmComponentType::ground,
+        nullptr
+    );
+    
+    ArmComponent joint1 = ArmComponent(
+        Vector3d(),
+        Vector3d(),
+        { Vector3d() },
+        ArmComponentType::revolute,
+        std::make_shared<ArmComponent>(ground)
+    );
+    ground.setChild(std::make_shared<ArmComponent>(joint1));
+
+    ArmComponent link1  = ArmComponent(
+        Vector3d(100.f, 0.f),
+        Vector3d(),
+        { Vector3d(), Vector3d(100.f, 0.f) },
+        ArmComponentType::rigidBody,
+        std::make_shared<ArmComponent>(joint1)
+    );
+    joint1.setChild(std::make_shared<ArmComponent>(link1));
+
+    ArmComponent joint2 = ArmComponent(
+        Vector3d(),
+        Vector3d(),
+        { Vector3d() },
+        ArmComponentType::revolute,
+        std::make_shared<ArmComponent>(link1)
+    );
+    link1.setChild(std::make_shared<ArmComponent>(joint2));
+
+    ArmComponent link2  = ArmComponent(
+        Vector3d(50.f, 0.f),
+        Vector3d(),
+        { Vector3d(), Vector3d(50.f, 0.f) },
+        ArmComponentType::rigidBody,
+        std::make_shared<ArmComponent>(joint2)
+    );
+    
+    std::cout << ground.isType(ArmComponentType::ground) << std::endl;
+
+    // std::vector<Vector3d> points = ground.getTransformedPoints();
+    // for (auto p : points)
+    //     p.print();
+    // points = joint1.getTransformedPoints();
+    // for (auto p : points)
+    //     p.print();
+    // points = link1.getTransformedPoints();
+    // for (auto p : points)
+    //     p.print();
+    // points = joint2.getTransformedPoints();
+    // for (auto p : points)
+    //     p.print();
+    // points = link2.getTransformedPoints();
+    // for (auto p : points)
+    //     p.print();
+
+    m_derivedRR.m_components = {
+        ground,
+        joint1,
+        link1,
+        joint2,
+        link2
+    };
 }
