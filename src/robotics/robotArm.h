@@ -5,9 +5,6 @@
 #include <vector>
 #include <tuple>
 
-#include "joint.h"
-#include "link.h"
-
 #include "vector3d.h"
 #include "matrix.h"
 

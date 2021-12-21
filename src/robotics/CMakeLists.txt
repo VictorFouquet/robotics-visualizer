@@ -1,6 +1,5 @@
 add_library(robotics
-    joint.cpp
-    link.cpp
+    armComponent.cpp
     prismaticRevolute.cpp
     revolutePrismatic.cpp
     revoluteRevolute.cpp
