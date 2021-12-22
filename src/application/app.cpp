@@ -128,12 +128,12 @@ void App::computeRobotBaseFrame()
 
 Frame App::computeRRFrame(std::vector<Vector3d> step, Frame frame)
 {
-    for (auto c : m_derivedRR.m_components)
-    {
-        std::vector<Vector3d> ps = c.getTransformedPoints();
-        for (auto p: ps)
-            p.print();
-    }
+    // for (auto c : m_derivedRR.m_components)
+    // {
+    //     std::vector<Vector3d> ps = c.getTransformedPoints();
+    //     for (auto p: ps)
+    //         p.print();
+    // }
     
     frame.addCircle(m_windowWidth / 2 + step[0].x, m_windowHeight / 2 + step[0].y, 10);
     frame.addCircle(m_windowWidth / 2 + step[1].x, m_windowHeight / 2 - step[1].y, 10);
@@ -440,6 +440,26 @@ void App::createRobots()
         ArmComponentType::rigidBody,
         std::make_shared<ArmComponent>(joint2)
     );
+    joint2.setChild(std::make_shared<ArmComponent>(link2));
+    
+    ArmComponent joint3 = ArmComponent(
+        Vector3d(),
+        Vector3d(),
+        { Vector3d() },
+        ArmComponentType::fixed,
+        std::make_shared<ArmComponent>(link2)
+    );
+    link2.setChild(std::make_shared<ArmComponent>(joint3));
+
+    ArmComponent endEff = ArmComponent(
+        Vector3d(),
+        Vector3d(),
+        { Vector3d() },
+        ArmComponentType::endEffector,
+        std::make_shared<ArmComponent>(joint3)
+    );
+    joint3.setChild(std::make_shared<ArmComponent>(endEff));
+
     
     std::cout << ground.isType(ArmComponentType::ground) << std::endl;
 
@@ -459,11 +479,26 @@ void App::createRobots()
     // for (auto p : points)
     //     p.print();
 
-    m_derivedRR.m_components = {
-        ground,
-        joint1,
-        link1,
-        joint2,
-        link2
-    };
+    // m_derivedRR.m_components = {
+    //     ground,
+    //     joint1,
+    //     link1,
+    //     joint2,
+    //     link2
+    // };
+    RevoluteRevolute r = RevoluteRevolute({
+        std::make_shared<ArmComponent>(ground),
+        std::make_shared<ArmComponent>(joint1),
+        std::make_shared<ArmComponent>(link1),
+        std::make_shared<ArmComponent>(joint2),
+        std::make_shared<ArmComponent>(link2),
+        std::make_shared<ArmComponent>(joint3),
+        std::make_shared<ArmComponent>(endEff)
+    });
+    std::vector<Vector3d> r1 = r.getJointComponents()[0]->getTransformedPoints();
+    std::vector<Vector3d> r2 = r.getJointComponents()[1]->getTransformedPoints();
+    std::vector<Vector3d> r3 = r.getJointComponents()[2]->getTransformedPoints();
+
+    std::cout << r1[0].distanceToVector(r2[0]) <<std::endl;
+    std::cout << r2[0].distanceToVector(r3[0]) <<std::endl;
 }

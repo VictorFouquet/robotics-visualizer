@@ -25,6 +25,30 @@ RevoluteRevolute::RevoluteRevolute(float lenghtLink1, float lenghtLink2, float t
     actuateJoints(links);
 }
 
+RevoluteRevolute::RevoluteRevolute(std::vector<std::shared_ptr<ArmComponent>> components)
+{
+    m_components = components;
+    for (auto component : m_components)
+    {
+        if (component->isType(ArmComponentType::rigidBody))
+            m_rigidBodies.push_back(component);
+        if (component->isType(ArmComponentType::joint))
+            m_jointComponents.push_back(component);
+        if (component->isType(ArmComponentType::endEffector))
+            m_endEffComponent = component;
+    }
+
+    Vector3d j1 = m_jointComponents[0]->getTransformedPoints()[0];
+    Vector3d j2 = m_jointComponents[1]->getTransformedPoints()[0];
+    Vector3d j3 = m_jointComponents[2]->getTransformedPoints()[0];
+
+    m_lengthLink1 = m_rigidBodies[0]->getTranslation().x;
+    m_lengthLink2 = m_rigidBodies[1]->getTranslation().x;
+
+    m_phi = m_jointComponents[0]->getRotation().z;
+    m_theta = m_jointComponents[1]->getRotation().z;
+}
+
 void RevoluteRevolute::actuateJoints(std::vector<float> links) 
 {
     m_rotations = links;

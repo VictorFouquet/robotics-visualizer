@@ -11,7 +11,8 @@ enum ArmComponentType
 {
     revolute    = 1,
     prismatic   = 2,
-    joint       = 3,
+    fixed       = 4,
+    joint       = 7,
     ground      = 8,
     rigidBody   = 16,
     endEffector = 32,
@@ -45,6 +46,8 @@ public:
 
     inline void setTranslation(Vector3d translate) { m_translation = translate; }
     inline void setRotation(Vector3d rotate) { m_rotation = rotate; }
+    inline Vector3d getRotation() { return m_rotation; }
+    inline Vector3d getTranslation() { return m_translation; }
 
     void setLocalTransform();
     void setGlobalTransform();
