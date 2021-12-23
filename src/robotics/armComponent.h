@@ -26,13 +26,7 @@ public:
     ArmComponent(Vector3d translate, Vector3d rotate)
         : m_translation(translate), m_rotation(rotate) { setLocalTransform(); }
 
-    ArmComponent(
-        Vector3d translate,
-        Vector3d rotate,
-        std::vector<Vector3d> points,
-        ArmComponentType type,
-        std::shared_ptr<ArmComponent> parent=nullptr
-    );
+    ArmComponent(Vector3d translate, Vector3d rotate, std::vector<Vector3d> points, ArmComponentType type);
 
     ~ArmComponent() = default;
 

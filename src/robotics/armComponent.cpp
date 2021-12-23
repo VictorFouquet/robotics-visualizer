@@ -1,14 +1,11 @@
 #include "armComponent.h"
 
 ArmComponent::ArmComponent(
-    Vector3d translate, Vector3d rotate, std::vector<Vector3d> points,
-    ArmComponentType type, std::shared_ptr<ArmComponent> parent
+    Vector3d translate, Vector3d rotate, std::vector<Vector3d> points, ArmComponentType type
 ) : m_translation(translate), m_rotation(rotate), m_points(points)
 {
-    m_parent = parent;
     setType(type);
     setLocalTransform();
-    setGlobalTransform();
 }
 
 void ArmComponent::setLocalTransform() 

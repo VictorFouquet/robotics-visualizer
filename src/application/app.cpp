@@ -402,77 +402,77 @@ void App::createRobots()
         Vector3d(),
         Vector3d(),
         { Vector3d() },
-        ArmComponentType::ground,
-        nullptr
+        ArmComponentType::ground
     );
     
     ArmComponent joint1 = ArmComponent(
         Vector3d(),
         Vector3d(0.f, 0.f, 0.f),
         { Vector3d() },
-        ArmComponentType::revolute,
-        std::make_shared<ArmComponent>(ground)
+        ArmComponentType::revolute
     );
-    ground.setChild(std::make_shared<ArmComponent>(joint1));
 
     ArmComponent link1  = ArmComponent(
         Vector3d(100.f, 0.f),
         Vector3d(),
         { Vector3d(), Vector3d(100.f, 0.f) },
-        ArmComponentType::rigidBody,
-        std::make_shared<ArmComponent>(joint1)
+        ArmComponentType::rigidBody
     );
-    joint1.setChild(std::make_shared<ArmComponent>(link1));
 
     ArmComponent joint2 = ArmComponent(
         Vector3d(),
         Vector3d(),
         { Vector3d() },
-        ArmComponentType::revolute,
-        std::make_shared<ArmComponent>(link1)
+        ArmComponentType::revolute
     );
-    link1.setChild(std::make_shared<ArmComponent>(joint2));
 
     ArmComponent link2  = ArmComponent(
         Vector3d(50.f, 0.f),
         Vector3d(),
         { Vector3d(), Vector3d(50.f, 0.f) },
-        ArmComponentType::rigidBody,
-        std::make_shared<ArmComponent>(joint2)
+        ArmComponentType::rigidBody
     );
-    joint2.setChild(std::make_shared<ArmComponent>(link2));
     
     ArmComponent joint3 = ArmComponent(
         Vector3d(),
         Vector3d(),
         { Vector3d() },
-        ArmComponentType::fixed,
-        std::make_shared<ArmComponent>(link2)
+        ArmComponentType::fixed
     );
-    link2.setChild(std::make_shared<ArmComponent>(joint3));
 
     ArmComponent endEff = ArmComponent(
         Vector3d(),
         Vector3d(),
         { Vector3d() },
-        ArmComponentType::endEffector,
-        std::make_shared<ArmComponent>(joint3)
+        ArmComponentType::endEffector
     );
-    joint3.setChild(std::make_shared<ArmComponent>(endEff));
+
+    std::shared_ptr<ArmComponent> groundPtr = std::make_shared<ArmComponent>(ground);
+    std::shared_ptr<ArmComponent> joint1Ptr = std::make_shared<ArmComponent>(joint1);
+    std::shared_ptr<ArmComponent> link1Ptr = std::make_shared<ArmComponent>(link1);
+    std::shared_ptr<ArmComponent> joint2Ptr = std::make_shared<ArmComponent>(joint2);
+    std::shared_ptr<ArmComponent> link2Ptr = std::make_shared<ArmComponent>(link2);
+    std::shared_ptr<ArmComponent> joint3Ptr = std::make_shared<ArmComponent>(joint3);
+    std::shared_ptr<ArmComponent> endEffPtr = std::make_shared<ArmComponent>(endEff);
+
+    groundPtr->setChild(joint1Ptr);
+    joint1Ptr->setParent(groundPtr);
+    joint1Ptr->setChild(link1Ptr);
+    link1Ptr->setParent(joint1Ptr);
+    link1Ptr->setChild(joint2Ptr);
+    joint2Ptr->setParent(link1Ptr);
+    joint2Ptr->setChild(link2Ptr);
+    link2Ptr->setParent(joint2Ptr);
+    link2Ptr->setChild(joint3Ptr);
+    joint3Ptr->setParent(link2Ptr);
+    joint3Ptr->setChild(endEffPtr);
+    endEffPtr->setParent(joint3Ptr);
 
     RevoluteRevolute r = RevoluteRevolute({
-        std::make_shared<ArmComponent>(ground),
-        std::make_shared<ArmComponent>(joint1),
-        std::make_shared<ArmComponent>(link1),
-        std::make_shared<ArmComponent>(joint2),
-        std::make_shared<ArmComponent>(link2),
-        std::make_shared<ArmComponent>(joint3),
-        std::make_shared<ArmComponent>(endEff)
+        groundPtr, joint1Ptr, link1Ptr, joint2Ptr, link2Ptr, joint3Ptr, endEffPtr
     });
 
-    r.actuateJoints({ 90.f, 0.f });
-    std::vector<std::shared_ptr<ArmComponent>> cmp = r.getRigidBodies(); 
-    std::vector<Vector3d> transformedPoints = cmp[0]->getTransformedPoints();
-    std::vector<Vector3d> tps = r.getRigidBodiesPoints(1);
+    r.actuateJoints({ 90.f, 90.f });
+    std::vector<Vector3d> transformedPoints = r.getRigidBodies()[1]->getTransformedPoints();
     std::cout << "Hello" << std::endl;
 }
