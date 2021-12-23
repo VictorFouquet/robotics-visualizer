@@ -36,12 +36,14 @@ private:
     Frame computePRFrame(std::vector<Vector3d> step, Frame frame);
     void handlePRClick(float x, float y);
 
+    void createRobots();
+    void createRR();
+
     void updateRobot();
     void updateRR();
     void updateRP();
     void updatePR();
 
-    void createRobots();
 private:
     int m_windowWidth = 800, m_windowHeight = 600;
     Window m_window =  Window(m_windowWidth, m_windowHeight);
@@ -54,7 +56,7 @@ private:
     RobotArm* m_robot;
     PrismaticRevolute m_derivedPR = PrismaticRevolute(120.f, 40.f, 10.f, 0.f, 80.f, 0.f, 200.f, 1.f);
     RevolutePrismatic m_derivedRP = RevolutePrismatic(75.f, 10.f, 0.f, 0.f, 0.f, 0.f, 1.f, 1.f);
-    RevoluteRevolute m_derivedRR  = RevoluteRevolute(100.f, 50.f, 0.f, 0.f, 0.f, 0.f, 20.f, 1.f);
+    RevoluteRevolute m_derivedRR  = RevoluteRevolute();
 
     bool m_RRActivated = false;
     bool m_RPActivated = false;

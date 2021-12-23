@@ -11,6 +11,14 @@
 
 #include "armComponent.h"
 
+#ifndef PI
+#define PI 3.14159265
+#endif
+
+static float rad(float n)
+{
+    return 2 * PI * (n / 360);
+}
 
 class RobotArm
 {
@@ -25,6 +33,10 @@ public:
     std::vector<float> getLinksLengths() const { return { m_lengthLink1, m_lengthLink2 }; }
     std::vector<float> getMaxJointValues() const { return { m_maxJoint1, m_maxJoint2 }; }
     std::vector<Vector3d> getJoints() const { return m_joints; }
+
+    virtual std::vector<std::shared_ptr<ArmComponent>> getRigidBodies() { return { nullptr }; }
+    virtual std::vector<std::shared_ptr<ArmComponent>> getJointComponents() { return { nullptr }; } 
+    virtual std::shared_ptr<ArmComponent> getEndEffectorComponent() { return nullptr; }
 
     virtual void actuateJoints(std::vector<float>) {};
     virtual std::vector<float> inverseKinematics(float x, float y) { return {}; }

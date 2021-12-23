@@ -109,14 +109,15 @@ Frame App::computeFrameComponents(std::vector<Vector3d> step)
 
 void App::computeRobotBaseFrame() 
 {
-    std::vector<Vector3d> joints = m_robot->getJoints();
+    // std::vector<Vector3d> joints = m_robot->getJoints();
         
-    Vector3d ef = m_robot->getEndEffector();
-
+    // Vector3d ef = m_robot->getEndEffector();
+    std::shared_ptr<ArmComponent> cmp = m_robot->getJointComponents()[0];
+    Vector3d joint1 = m_robot->getJointComponents()[0]->getTransformedPoints()[0];
     std::vector<Vector3d> baseFrame = { 
-        joints[0],
-        joints[1],
-        ef
+        m_robot->getJointComponents()[0]->getTransformedPoints()[0],
+        m_robot->getJointComponents()[1]->getTransformedPoints()[0],
+        m_robot->getEndEffectorComponent()->getTransformedPoints()[0]
     };
     Frame frame = computeFrameComponents(baseFrame);
 
@@ -398,6 +399,11 @@ void App::updatePR()
 
 void App::createRobots() 
 {
+    createRR();
+}
+
+void App::createRR()
+{
     ArmComponent ground = ArmComponent(
         Vector3d(),
         Vector3d(),
@@ -468,11 +474,7 @@ void App::createRobots()
     joint3Ptr->setChild(endEffPtr);
     endEffPtr->setParent(joint3Ptr);
 
-    RevoluteRevolute r = RevoluteRevolute({
+    m_derivedRR = RevoluteRevolute({
         groundPtr, joint1Ptr, link1Ptr, joint2Ptr, link2Ptr, joint3Ptr, endEffPtr
-    });
-
-    r.actuateJoints({ 90.f, 90.f });
-    std::vector<Vector3d> transformedPoints = r.getRigidBodies()[1]->getTransformedPoints();
-    std::cout << "Hello" << std::endl;
+    }, 20.f, 1.f);
 }

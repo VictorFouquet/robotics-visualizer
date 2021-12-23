@@ -2,14 +2,6 @@
 #include <assert.h>
 #include <algorithm>
 
-#ifndef PI
-#define PI 3.14159265
-#endif
-
-static float rad(float n)
-{
-    return 2 * PI * (n / 360);
-}
 
 PrismaticRevolute::PrismaticRevolute(float lenghtLink1, float lenghtLink2, float delta, float phi,
         float maxJoint1, float maxJoint2, float weightLink1, float weightLink2) 

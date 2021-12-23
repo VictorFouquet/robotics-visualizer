@@ -6,9 +6,11 @@
 class RevoluteRevolute : public RobotArm
 {
 public:
-    RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi,
-        float maxJoint1=1.f, float maxJoint2=1.f, float weightLink1=1.f, float weightLink2=1.f);
-    RevoluteRevolute(std::vector<std::shared_ptr<ArmComponent>> components);
+    RevoluteRevolute() = default;
+    RevoluteRevolute(
+        std::vector<std::shared_ptr<ArmComponent>> components,
+        float weightLink1=1.f, float weightLink2=1.f
+    );
     ~RevoluteRevolute() = default;
 
     virtual void actuateJoints(std::vector<float>) override;
@@ -18,12 +20,12 @@ public:
     virtual std::vector<std::vector<float>> getDeltasBetweenPoses(float x, float y) override;
     virtual std::vector<std::vector<Vector3d>> interpolate(float x, float y, int step) override;
     
-    std::vector<std::shared_ptr<ArmComponent>> getRigidBodies() { return { m_rigidBodies[0], m_rigidBodies[1] }; }
-    std::vector<std::shared_ptr<ArmComponent>> getJointComponents() { return m_jointComponents; } 
+    virtual std::vector<std::shared_ptr<ArmComponent>> getRigidBodies() override { return { m_rigidBodies[0], m_rigidBodies[1] }; }
+    virtual std::vector<std::shared_ptr<ArmComponent>> getJointComponents() override { return m_jointComponents; } 
+    virtual std::shared_ptr<ArmComponent> getEndEffectorComponent() override { return m_endEffComponent; }
 
-    std::vector<Vector3d> getRigidBodiesPoints(int index);
 private:
     static bool compareDelta(std::vector<float> a, std::vector<float> b);
 private:
-    float m_theta, m_phi, m_weightLink1, m_weightLink2;
+    float m_theta, m_phi, m_weightLink1=20.f, m_weightLink2=1.f;
 };
