@@ -18,8 +18,10 @@ public:
     virtual std::vector<std::vector<float>> getDeltasBetweenPoses(float x, float y) override;
     virtual std::vector<std::vector<Vector3d>> interpolate(float x, float y, int step) override;
     
-    std::vector<std::shared_ptr<ArmComponent>> getRigidBodies() { return m_rigidBodies; }
+    std::vector<std::shared_ptr<ArmComponent>> getRigidBodies() { return { m_rigidBodies[0], m_rigidBodies[1] }; }
     std::vector<std::shared_ptr<ArmComponent>> getJointComponents() { return m_jointComponents; } 
+
+    std::vector<Vector3d> getRigidBodiesPoints(int index);
 private:
     static bool compareDelta(std::vector<float> a, std::vector<float> b);
 private:

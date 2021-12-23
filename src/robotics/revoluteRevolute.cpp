@@ -22,7 +22,7 @@ RevoluteRevolute::RevoluteRevolute(float lenghtLink1, float lenghtLink2, float t
     m_lengthLink2 = lenghtLink2;
     std::vector<float> links = { phi, theta };
     m_rotations = { theta, phi };
-    actuateJoints(links);
+    // actuateJoints(links);
 }
 
 RevoluteRevolute::RevoluteRevolute(std::vector<std::shared_ptr<ArmComponent>> components)
@@ -51,6 +51,31 @@ RevoluteRevolute::RevoluteRevolute(std::vector<std::shared_ptr<ArmComponent>> co
 
 void RevoluteRevolute::actuateJoints(std::vector<float> links) 
 {
+    m_jointComponents[0]->setRotation(Vector3d(0.f, 0.f, links[0]));
+    m_jointComponents[0]->setLocalTransform();
+    m_jointComponents[0]->setGlobalTransform();
+    m_rigidBodies[0]->setGlobalTransform();
+    m_jointComponents[1]->setRotation(Vector3d(0.f, 0.f, links[1]));
+    m_jointComponents[1]->setLocalTransform();
+    m_jointComponents[1]->setGlobalTransform();
+
+    for (auto component : m_components)
+        component->setGlobalTransform();
+
+    std::shared_ptr<ArmComponent> component = m_endEffComponent;
+
+    while (component)
+    {
+        component->setGlobalTransform();
+        std::vector<Vector3d> l1P = component->getTransformedPoints();
+        std::cout << component->getType() << std::endl;
+        for (auto p : l1P)
+            p.print();
+        std::cout << std::endl;
+        component = component->getParent();
+    }
+
+
     m_rotations = links;
     Matrix m1 = Matrix::rotate(0.f, 0.f, links[0]) * Matrix::translate(m_lengthLink1, 0.f, 0.f);
     Matrix m2 = Matrix::rotate(0.f, 0.f, links[1]) * Matrix::translate(m_lengthLink2, 0.f, 0.f);
@@ -213,4 +238,10 @@ std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(float x, float 
     retData.push_back(stepToRender);
 
     return retData;
+}
+
+std::vector<Vector3d> RevoluteRevolute::getRigidBodiesPoints(int index)
+{
+    std::vector<Vector3d> ctn = m_rigidBodies[index]->getTransformedPoints();
+    return ctn;
 }

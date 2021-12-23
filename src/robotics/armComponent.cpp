@@ -43,7 +43,11 @@ std::vector<Vector3d> ArmComponent::getTransformedPoints()
         transform = m_localTransform;
 
     for (auto p : m_points)
+    {
+        Vector3d newP = (transform * p);
+        
         updated.push_back((transform * p));
+    }
 
     return updated;
 }

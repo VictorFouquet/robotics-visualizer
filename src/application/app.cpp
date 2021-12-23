@@ -408,7 +408,7 @@ void App::createRobots()
     
     ArmComponent joint1 = ArmComponent(
         Vector3d(),
-        Vector3d(),
+        Vector3d(0.f, 0.f, 0.f),
         { Vector3d() },
         ArmComponentType::revolute,
         std::make_shared<ArmComponent>(ground)
@@ -460,32 +460,6 @@ void App::createRobots()
     );
     joint3.setChild(std::make_shared<ArmComponent>(endEff));
 
-    
-    std::cout << ground.isType(ArmComponentType::ground) << std::endl;
-
-    // std::vector<Vector3d> points = ground.getTransformedPoints();
-    // for (auto p : points)
-    //     p.print();
-    // points = joint1.getTransformedPoints();
-    // for (auto p : points)
-    //     p.print();
-    // points = link1.getTransformedPoints();
-    // for (auto p : points)
-    //     p.print();
-    // points = joint2.getTransformedPoints();
-    // for (auto p : points)
-    //     p.print();
-    // points = link2.getTransformedPoints();
-    // for (auto p : points)
-    //     p.print();
-
-    // m_derivedRR.m_components = {
-    //     ground,
-    //     joint1,
-    //     link1,
-    //     joint2,
-    //     link2
-    // };
     RevoluteRevolute r = RevoluteRevolute({
         std::make_shared<ArmComponent>(ground),
         std::make_shared<ArmComponent>(joint1),
@@ -495,10 +469,10 @@ void App::createRobots()
         std::make_shared<ArmComponent>(joint3),
         std::make_shared<ArmComponent>(endEff)
     });
-    std::vector<Vector3d> r1 = r.getJointComponents()[0]->getTransformedPoints();
-    std::vector<Vector3d> r2 = r.getJointComponents()[1]->getTransformedPoints();
-    std::vector<Vector3d> r3 = r.getJointComponents()[2]->getTransformedPoints();
 
-    std::cout << r1[0].distanceToVector(r2[0]) <<std::endl;
-    std::cout << r2[0].distanceToVector(r3[0]) <<std::endl;
+    r.actuateJoints({ 90.f, 0.f });
+    std::vector<std::shared_ptr<ArmComponent>> cmp = r.getRigidBodies(); 
+    std::vector<Vector3d> transformedPoints = cmp[0]->getTransformedPoints();
+    std::vector<Vector3d> tps = r.getRigidBodiesPoints(1);
+    std::cout << "Hello" << std::endl;
 }

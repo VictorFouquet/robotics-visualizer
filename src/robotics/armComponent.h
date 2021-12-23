@@ -38,7 +38,8 @@ public:
 
     inline void setType(ArmComponentType type) { m_type |= type; }
     inline bool isType(ArmComponentType type) { return (m_type & type); }
-
+    inline int getType() { return m_type; }
+    
     inline void setChild(std::shared_ptr<ArmComponent> child) { m_child = child; }
     inline void setParent(std::shared_ptr<ArmComponent> parent) { m_parent = parent; }
     inline std::shared_ptr<ArmComponent> getChild() { return m_child; }
