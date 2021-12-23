@@ -95,6 +95,7 @@ std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x,
     Vector3d joint1Pos = m_jointComponents[0]->getTransformedPoints()[0];
     float joint2Rot = m_jointComponents[1]->getRotation().z;
     Vector3d joint2Pos = m_jointComponents[1]->getTransformedPoints()[0];
+    Vector3d endEffectorPos = m_endEffComponent->getTransformedPoints()[0];
 
     float dt1A = theta1 - joint1Rot;
     float dt1B = theta1 - joint1Rot - 360.f;
@@ -112,8 +113,8 @@ std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x,
         dt2A = 360.f - joint1Rot + theta2;
         dt2B = -360.f + dt2A;
     }
-    int orientation = joint1Pos.orientation(joint2Pos, m_endEffector);
-    if (joint1Pos.orientation(joint2Pos, m_endEffector) > 0)
+    int orientation = joint1Pos.orientation(joint2Pos, endEffectorPos);
+    if (joint1Pos.orientation(joint2Pos, endEffectorPos) > 0)
     {
         dp1A = 360 - joint2Rot + phi1;
         dp1B = -360.f + dp1A;
