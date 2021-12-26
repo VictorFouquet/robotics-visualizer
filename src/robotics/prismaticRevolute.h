@@ -1,13 +1,14 @@
 #pragma once
 
 #include "robotArm.h"
+#include "circle.h"
 
-class RevolutePrismatic : public RobotArm
+class PrismaticRevolute : virtual public RobotArm
 {
 public:
-    RevolutePrismatic(float lenghtLink1, float lenghtLink2, float phi, float delta,
-        float maxJoint1=1.f, float maxJoint2=1.f,  float weightLink1=1.f, float weightLink2=1.f);
-    ~RevolutePrismatic() = default;
+    PrismaticRevolute(float lenghtLink1, float lenghtLink2, float delta, float phi,
+        float maxJoint1=1.f, float maxJoint2=1.f, float weightLink1=1.f, float weightLink2=1.f);
+    ~PrismaticRevolute() = default;
 
     virtual void actuateJoints(std::vector<float>) override;
 
@@ -18,5 +19,5 @@ public:
 private:
     static bool compareDelta(std::vector<float> a, std::vector<float> b);
 private:
-    float m_phi, m_delta, m_weightLink1, m_weightLink2;
+    float m_delta, m_phi, m_weightLink1, m_weightLink2;
 };

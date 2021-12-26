@@ -1,4 +1,4 @@
-#include "revolutePrismatic.h"
+#include "prismaticRevolute.h"
 #include <assert.h>
 #include <algorithm>
 
@@ -11,7 +11,7 @@ static float rad(float n)
     return 2 * PI * (n / 360);
 }
 
-RevolutePrismatic::RevolutePrismatic(float lenghtLink1, float lenghtLink2, float phi, float delta,
+PrismaticRevolute::PrismaticRevolute(float lenghtLink1, float lenghtLink2, float delta, float phi,
         float maxJoint1, float maxJoint2, float weightLink1, float weightLink2) 
     : m_delta(delta), m_phi(phi), m_weightLink1(weightLink1), m_weightLink2(weightLink2)
 {
@@ -24,11 +24,11 @@ RevolutePrismatic::RevolutePrismatic(float lenghtLink1, float lenghtLink2, float
     actuateJoints(links);
 }
 
-void RevolutePrismatic::actuateJoints(std::vector<float> links) 
+void PrismaticRevolute::actuateJoints(std::vector<float> links) 
 {
     m_rotations = links;
-    Matrix m1 = Matrix::rotate(0.f, 0.f, links[0]) * Matrix::translate(m_lengthLink1, 0.f, 0.f);
-    Matrix m2 = Matrix::rotate(0.f, 0.f, 0.f) * Matrix::translate(m_lengthLink2 + links[1], 0.f, 0.f);
+    Matrix m1 = Matrix::rotate(0.f, 0.f, 90.f) * Matrix::translate(m_lengthLink1 + links[0], 0.f, 0.f);
+    Matrix m2 = Matrix::rotate(0.f, 0.f, links[1]) * Matrix::translate(m_lengthLink2, 0.f, 0.f);
     Matrix m3 = m1 * m2;
 
     Vector3d p1(0.f, 0.f, 0.f);
@@ -45,50 +45,62 @@ void RevolutePrismatic::actuateJoints(std::vector<float> links)
     m_links = { link1, link2 };
 }
 
-std::vector<float> RevolutePrismatic::inverseKinematics(float x, float y) 
+std::vector<float> PrismaticRevolute::inverseKinematics(float x, float y) 
 {
-    Vector3d endEffectorVector = Vector3d(x, y);
+    Vector3d origin = Vector3d(0.f, 0.f), endEffectorVector = Vector3d(x, y), ip1 = Vector3d(), ip2 = Vector3d();
 
-    float phi = Vector3d(1.f, 0.f).angleToVector(endEffectorVector) * 180.f / 3.14;
+    Geometry::Circle c = Geometry::Circle(m_lengthLink2, endEffectorVector);
+    c.getIntersectionPointsWithSegment(origin, Vector3d(0.f, 1000.f), ip1, ip2);
 
-    if (endEffectorVector.y < 0)
+    Vector3d u = endEffectorVector - ip1;
+    Vector3d v = endEffectorVector - ip2;
+
+    float phi1 = Vector3d(0.f, 1.f).angleToVector(u) * 180.f / 3.14;
+    float phi2 = Vector3d(0.f, 1.f).angleToVector(v) * 180.f / 3.14;
+
+    if (endEffectorVector.x > 0)
     {
-        phi = 360.f - phi;
+        phi1 = 360.f - phi1;
+        phi2 = 360.f - phi2;
     }
 
-    float delta = endEffectorVector.magnitude() - m_lengthLink1 - m_lengthLink2;
+    float delta1 = ip1.y - m_lengthLink1;
+    float delta2 = ip2.y - m_lengthLink1;
 
-    std::vector<float> values = { phi, delta };
+    std::vector<float> values = { delta1, phi1, delta2, phi2 };
 
     return values;
 }
 
-std::vector<std::vector<float>> RevolutePrismatic::getDeltasBetweenPoses(float x, float y) 
+std::vector<std::vector<float>> PrismaticRevolute::getDeltasBetweenPoses(float x, float y) 
 {
     std::vector<float> values = inverseKinematics(x, y);
 
-    float dp1 = values[0] - m_rotations[0];
-    float dp2 = values[0] - m_rotations[0] - 360.f;
-    float dd  = values[1] - m_rotations[1];
+    float dd1  = values[0] - m_rotations[0];
+    float dp1A = values[1] - m_rotations[1];
+    float dp1B = values[1] - m_rotations[1] - 360.f;
+    float dd2  = values[2] - m_rotations[0];
+    float dp2A = values[3] - m_rotations[1];
+    float dp2B = values[3] - m_rotations[1] - 360.f;
 
-    if (m_joints[1].y < 0)
+    std::vector<std::vector<float>> deltas = {};
+
+    if ((values[0] + m_lengthLink1) < m_lengthLink1 + m_maxJoint1)
     {
-        dp1 = 360 - m_rotations[0] + values[0];
-        dp2 = -360.f + dp1;
+        deltas.push_back({ dd1, dp1A, std::abs(dd1) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 });
+        deltas.push_back({ dd1, dp1B, std::abs(dd1) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 });
     }
-
-    std::vector<std::vector<float>> deltas = {
-        { dp1, dd },
-        { dp2, dd },
-    };
-
-    if (std::abs(deltas[0][0]) > std::abs(deltas[1][0]))
-        std::swap(deltas[0], deltas[1]);
+    if ((values[2] + m_lengthLink1) < m_lengthLink1 + m_maxJoint1)
+    {
+        deltas.push_back({ dd2, dp2A, std::abs(dd2) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 });
+        deltas.push_back({ dd2, dp2B, std::abs(dd2) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 });
+    }
+    std::sort(deltas.begin(), deltas.end(), compareDelta);
 
     return deltas;
 }
 
-std::vector<std::vector<Vector3d>> RevolutePrismatic::interpolate(float x, float y, int step) 
+std::vector<std::vector<Vector3d>> PrismaticRevolute::interpolate(float x, float y, int step) 
 {
     std::vector<std::vector<Vector3d>> retData = { };
 
@@ -110,10 +122,10 @@ std::vector<std::vector<Vector3d>> RevolutePrismatic::interpolate(float x, float
 
             float roatA = m_rotations[0] + unitDeltaP;
             float roatB = m_rotations[1] + unitDeltaD;
-            if (roatA < 0.f)
-                roatA += 360.f;
-            if (roatA > 360.f)
-                roatA = fmod(roatA, 360.f);
+            if (roatB < 0.f)
+                roatB += 360.f;
+            if (roatB > 360.f)
+                roatB = fmod(roatB, 360.f);
 
             actuateJoints({ roatA, roatB });
             stepToRender.push_back(Vector3d(m_joints[1].x, m_joints[1].y, 0.f));
@@ -140,7 +152,7 @@ std::vector<std::vector<Vector3d>> RevolutePrismatic::interpolate(float x, float
     return retData;
 }
 
-bool RevolutePrismatic::compareDelta(std::vector<float> a, std::vector<float> b) 
+bool PrismaticRevolute::compareDelta(std::vector<float> a, std::vector<float> b) 
 {
-    return true;
+    return a[2] < b[2];
 }

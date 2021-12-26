@@ -5,7 +5,8 @@
 class RevoluteRevolute : public RobotArm
 {
 public:
-    RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi, float weightLink1=1.f, float weightLink2=1.f);
+    RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi,
+        float maxJoint1=1.f, float maxJoint2=1.f, float weightLink1=1.f, float weightLink2=1.f);
     ~RevoluteRevolute() = default;
 
     virtual void actuateJoints(std::vector<float>) override;
@@ -18,5 +19,5 @@ public:
 private:
     static bool compareDelta(std::vector<float> a, std::vector<float> b);
 private:
-    float m_lenghtLink1, m_lenghtLink2, m_theta, m_phi, m_weightLink1, m_weightLink2;
+    float m_theta, m_phi, m_weightLink1, m_weightLink2;
 };

@@ -7,6 +7,13 @@ void Frame::addCircle(int x, int y, float r)
     m_circles.push_back(c);
 }
 
+void Frame::addCircle(int x, int y, float radius, float r, float g, float b, float a) 
+{
+    Circle c = Circle(x, y, radius);
+    c.setColor(r, g, b, 255);
+    m_circles.push_back(c);
+}
+
 void Frame::addCircleBorder(int x, int y, float r, float width) 
 {
     CircleBorder c = CircleBorder(x, y, r, width);

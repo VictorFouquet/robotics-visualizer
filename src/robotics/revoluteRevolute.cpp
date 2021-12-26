@@ -12,9 +12,14 @@ static float rad(float n)
     return 2 * PI * (n / 360);
 }
 
-RevoluteRevolute::RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi, float weightLink1, float weightLink2)
-    : m_lenghtLink1(lenghtLink1), m_lenghtLink2(lenghtLink2), m_theta(theta), m_phi(phi), m_weightLink1(weightLink1), m_weightLink2(weightLink2)
+RevoluteRevolute::RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta,
+        float maxJoint1, float maxJoint2, float phi, float weightLink1, float weightLink2)
+    : m_theta(theta), m_phi(phi), m_weightLink1(weightLink1), m_weightLink2(weightLink2)
 {
+    m_maxJoint1 = maxJoint1;
+    m_maxJoint2 = maxJoint2;
+    m_lengthLink1 = lenghtLink1; 
+    m_lengthLink2 = lenghtLink2;
     std::vector<float> links = { phi, theta };
     m_rotations = { theta, phi };
     actuateJoints(links);
@@ -23,8 +28,8 @@ RevoluteRevolute::RevoluteRevolute(float lenghtLink1, float lenghtLink2, float t
 void RevoluteRevolute::actuateJoints(std::vector<float> links) 
 {
     m_rotations = links;
-    Matrix m1 = Matrix::rotate(0.f, 0.f, links[0]) * Matrix::translate(m_lenghtLink1, 0.f, 0.f);
-    Matrix m2 = Matrix::rotate(0.f, 0.f, links[1]) * Matrix::translate(m_lenghtLink2, 0.f, 0.f);
+    Matrix m1 = Matrix::rotate(0.f, 0.f, links[0]) * Matrix::translate(m_lengthLink1, 0.f, 0.f);
+    Matrix m2 = Matrix::rotate(0.f, 0.f, links[1]) * Matrix::translate(m_lengthLink2, 0.f, 0.f);
     Matrix m3 = m1 * m2;
 
     Vector3d p1(0.f, 0.f, 0.f);
@@ -46,8 +51,8 @@ std::vector<float> RevoluteRevolute::inverseKinematics(float x, float y)
     Vector3d endEffectorVector = Vector3d(x, y);
     Vector3d u1 = Vector3d(), u2 = Vector3d();
 
-    Geometry::Circle c1(m_lenghtLink1, Vector3d(0.f, 0.f));
-    Geometry::Circle c2(m_lenghtLink2, Vector3d(x, y));
+    Geometry::Circle c1(m_lengthLink1, Vector3d(0.f, 0.f));
+    Geometry::Circle c2(m_lengthLink2, Vector3d(x, y));
 
     c1.getIntersectionPointsWithCircle(c2, u1, u2);
 

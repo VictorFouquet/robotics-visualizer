@@ -76,6 +76,9 @@ void Window::onRender(Frame frame)
     SDL_SetRenderDrawColor(m_renderer, 10, 10, 30, 255);
     SDL_RenderClear(m_renderer);
     
+    for (auto rectangle : frame.getRectangles())
+        rectangle.render(m_renderer);
+        
     for (auto arc : frame.getArcs())
     {
         arc.render(m_renderer);
@@ -92,8 +95,6 @@ void Window::onRender(Frame frame)
         circle.render(m_renderer);
     };
 
-    for (auto rectangle : frame.getRectangles())
-        rectangle.render(m_renderer);
 
     for (auto message : frame.getMessages())
         message.render(m_renderer);
