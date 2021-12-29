@@ -39,6 +39,7 @@ private:
     void createRobots();
     void createRR();
     void createRP();
+    void createPR();
 
     void updateRobot();
     void updateRR();
@@ -55,8 +56,8 @@ private:
     
     GUI m_gui = GUI();
     RobotArm* m_robot;
-    PrismaticRevolute m_derivedPR = PrismaticRevolute(120.f, 40.f, 10.f, 0.f, 80.f, 0.f, 200.f, 1.f);
-    RevolutePrismatic m_derivedRP = RevolutePrismatic();// RevolutePrismatic(75.f, 10.f, 0.f, 0.f, 0.f, 0.f, 1.f, 1.f);
+    PrismaticRevolute m_derivedPR = PrismaticRevolute();
+    RevolutePrismatic m_derivedRP = RevolutePrismatic();
     RevoluteRevolute m_derivedRR  = RevoluteRevolute();
 
     bool m_RRActivated = false;

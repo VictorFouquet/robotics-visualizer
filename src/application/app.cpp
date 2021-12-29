@@ -112,24 +112,46 @@ void App::computeRobotBaseFrame()
     std::shared_ptr<ArmComponent> cmp = m_robot->getJointComponents()[0];
     Vector3d joint1 = m_robot->getJointComponents()[0]->getTransformedPoints()[0];
     Vector3d jointsValues;
+    std::vector<Vector3d> baseFrame = {};
+
     if (m_view == 1)
     {
-        jointsValues.x = m_robot->getJointComponents()[0]->getRotation().z;
-        jointsValues.y = m_robot->getJointComponents()[1]->getRotation().z;
+        baseFrame = { 
+            m_robot->getJointComponents()[0]->getTransformedPoints()[0],
+            m_robot->getJointComponents()[1]->getTransformedPoints()[0],
+            m_robot->getEndEffectorComponent()->getTransformedPoints()[0],
+            Vector3d(
+                m_robot->getJointComponents()[0]->getRotation().z,
+                m_robot->getJointComponents()[1]->getRotation().z
+            )
+        };
     }
     else if (m_view == 2)
     {
-        jointsValues.x = m_robot->getJointComponents()[0]->getRotation().z;
-        jointsValues.y = m_robot->getJointComponents()[1]->getTranslation().x;
+        baseFrame = { 
+            m_robot->getJointComponents()[0]->getTransformedPoints()[0],
+            m_robot->getJointComponents()[1]->getTransformedPoints()[0],
+            m_robot->getEndEffectorComponent()->getTransformedPoints()[0],
+            Vector3d(
+                m_robot->getJointComponents()[0]->getRotation().z,
+                m_robot->getJointComponents()[1]->getTranslation().x
+            )
+        };
     }
-    std::vector<Vector3d> baseFrame = { 
-        m_robot->getJointComponents()[0]->getTransformedPoints()[0],
-        m_robot->getJointComponents()[1]->getTransformedPoints()[0],
-        m_robot->getEndEffectorComponent()->getTransformedPoints()[0],
-        jointsValues
-    };
-    Frame frame = computeFrameComponents(baseFrame);
+    else if (m_view == 3)
+    {
+        baseFrame = {
+            Vector3d(),
+            m_robot->getJointComponents()[1]->getTransformedPoints()[0],
+            m_robot->getEndEffectorComponent()->getTransformedPoints()[0],
+            Vector3d(
+                m_robot->getJointComponents()[0]->getRotation().z,
+                m_robot->getJointComponents()[1]->getTranslation().x
+            )
+        };
+    }
 
+    Frame frame = computeFrameComponents(baseFrame);
 
     m_frames.push_back(frame);
 
@@ -320,6 +342,7 @@ void App::handlePRClick(float x, float y)
             m_frames.push_back(frame);
         }
     }
+    std::cout <<'\n';
 }
 
 void App::updateRobot() 
@@ -384,7 +407,7 @@ void App::updatePR()
     {
         m_PRActivated = true;
         std::vector<Vector3d> baseFrame = { 
-            Vector3d(0.f, 0.f, 0.f),
+            Vector3d(0.f, 120.f, 0.f),
             Vector3d(0.f, 80.f, 0.f),
             Vector3d(0.f, 130.f, 0.f)
         };
@@ -403,6 +426,7 @@ void App::createRobots()
 {
     createRR();
     createRP();
+    createPR();
 }
 
 void App::createRR()
@@ -535,9 +559,9 @@ void App::createRP()
 
     std::shared_ptr<ArmComponent> groundPtr = std::make_shared<ArmComponent>(ground);
     std::shared_ptr<ArmComponent> joint1Ptr = std::make_shared<ArmComponent>(joint1);
-    std::shared_ptr<ArmComponent> link1Ptr = std::make_shared<ArmComponent>(link1);
+    std::shared_ptr<ArmComponent> link1Ptr  = std::make_shared<ArmComponent>(link1);
     std::shared_ptr<ArmComponent> joint2Ptr = std::make_shared<ArmComponent>(joint2);
-    std::shared_ptr<ArmComponent> link2Ptr = std::make_shared<ArmComponent>(link2);
+    std::shared_ptr<ArmComponent> link2Ptr  = std::make_shared<ArmComponent>(link2);
     std::shared_ptr<ArmComponent> joint3Ptr = std::make_shared<ArmComponent>(joint3);
     std::shared_ptr<ArmComponent> endEffPtr = std::make_shared<ArmComponent>(endEff);
 
@@ -556,5 +580,83 @@ void App::createRP()
 
     m_derivedRP = RevolutePrismatic({
         groundPtr, joint1Ptr, link1Ptr, joint2Ptr, link2Ptr, joint3Ptr, endEffPtr
+    }, 20.f, 1.f);
+}
+
+void App::createPR()
+{
+    ArmComponent ground = ArmComponent(
+        Vector3d(),
+        Vector3d(),
+        { Vector3d() },
+        ArmComponentType::ground
+    );
+    // 120.f, 40.f, 10.f, 0.f, 80.f, 0.f, 200.f, 1.f
+
+    ArmComponent link1  = ArmComponent(
+        Vector3d(120.f, 0.f),
+        Vector3d(0.f, 0.f, 90.f),
+        { Vector3d(), Vector3d(75.f, 0.f) },
+        ArmComponentType::rigidBody
+    );
+
+    ArmComponent joint1 = ArmComponent(
+        Vector3d(10.f, 0.f),
+        Vector3d(),
+        { Vector3d() },
+        ArmComponentType::prismatic
+    );
+
+    ArmComponent joint2 = ArmComponent(
+        Vector3d(),
+        Vector3d(0.f, 0.f, 0.f),
+        { Vector3d() },
+        ArmComponentType::revolute
+    );
+
+    ArmComponent link2  = ArmComponent(
+        Vector3d(40.f, 0.f),
+        Vector3d(),
+        { Vector3d(), Vector3d(10.f, 0.f) },
+        ArmComponentType::rigidBody
+    );
+
+    ArmComponent joint3 = ArmComponent(
+        Vector3d(),
+        Vector3d(),
+        { Vector3d() },
+        ArmComponentType::fixed
+    );
+
+    ArmComponent endEff = ArmComponent(
+        Vector3d(),
+        Vector3d(),
+        { Vector3d() },
+        ArmComponentType::endEffector
+    );
+
+    std::shared_ptr<ArmComponent> groundPtr = std::make_shared<ArmComponent>(ground);
+    std::shared_ptr<ArmComponent> joint1Ptr = std::make_shared<ArmComponent>(joint1);
+    std::shared_ptr<ArmComponent> link1Ptr  = std::make_shared<ArmComponent>(link1);
+    std::shared_ptr<ArmComponent> joint2Ptr = std::make_shared<ArmComponent>(joint2);
+    std::shared_ptr<ArmComponent> link2Ptr  = std::make_shared<ArmComponent>(link2);
+    std::shared_ptr<ArmComponent> joint3Ptr = std::make_shared<ArmComponent>(joint3);
+    std::shared_ptr<ArmComponent> endEffPtr = std::make_shared<ArmComponent>(endEff);
+
+    groundPtr->setChild(joint1Ptr);
+    link1Ptr->setParent(groundPtr);
+    link1Ptr->setChild(joint1Ptr);
+    joint1Ptr->setParent(link1Ptr);
+    joint1Ptr->setChild(joint2Ptr);
+    joint2Ptr->setParent(joint1Ptr);
+    joint2Ptr->setChild(link2Ptr);
+    link2Ptr->setParent(joint2Ptr);
+    link2Ptr->setChild(joint3Ptr);
+    joint3Ptr->setParent(link2Ptr);
+    joint3Ptr->setChild(endEffPtr);
+    endEffPtr->setParent(joint3Ptr);
+
+    m_derivedPR = PrismaticRevolute({
+        groundPtr, link1Ptr, joint1Ptr, joint2Ptr, link2Ptr, joint3Ptr, endEffPtr
     }, 20.f, 1.f);
 }
