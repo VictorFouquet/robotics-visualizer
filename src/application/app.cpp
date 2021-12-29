@@ -145,8 +145,8 @@ void App::computeRobotBaseFrame()
             m_robot->getJointComponents()[1]->getTransformedPoints()[0],
             m_robot->getEndEffectorComponent()->getTransformedPoints()[0],
             Vector3d(
-                m_robot->getJointComponents()[0]->getRotation().z,
-                m_robot->getJointComponents()[1]->getTranslation().x
+                m_robot->getJointComponents()[0]->getTranslation().x,
+                m_robot->getJointComponents()[1]->getRotation().z
             )
         };
     }
@@ -342,7 +342,6 @@ void App::handlePRClick(float x, float y)
             m_frames.push_back(frame);
         }
     }
-    std::cout <<'\n';
 }
 
 void App::updateRobot() 
@@ -406,10 +405,11 @@ void App::updatePR()
     if (!m_PRActivated)
     {
         m_PRActivated = true;
-        std::vector<Vector3d> baseFrame = { 
-            Vector3d(0.f, 120.f, 0.f),
-            Vector3d(0.f, 80.f, 0.f),
-            Vector3d(0.f, 130.f, 0.f)
+        std::vector<Vector3d> baseFrame = {
+            Vector3d(),
+            Vector3d(0.f, 130.f, 0.f),
+            Vector3d(0.f, 170.f, 0.f),
+            Vector3d(0.f, 10.f, 0.f)
         };
         Frame frame = computeFrameComponents(baseFrame);
 
@@ -591,7 +591,6 @@ void App::createPR()
         { Vector3d() },
         ArmComponentType::ground
     );
-    // 120.f, 40.f, 10.f, 0.f, 80.f, 0.f, 200.f, 1.f
 
     ArmComponent link1  = ArmComponent(
         Vector3d(120.f, 0.f),
