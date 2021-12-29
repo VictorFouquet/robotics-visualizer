@@ -22,10 +22,6 @@ RevoluteRevolute::RevoluteRevolute(std::vector<std::shared_ptr<ArmComponent>> co
         component->setGlobalTransform();
     }
 
-    Vector3d j1 = m_jointComponents[0]->getTransformedPoints()[0];
-    Vector3d j2 = m_jointComponents[1]->getTransformedPoints()[0];
-    Vector3d j3 = m_jointComponents[2]->getTransformedPoints()[0];
-
     m_lengthLink1 = m_rigidBodies[0]->getTranslation().x;
     m_lengthLink2 = m_rigidBodies[1]->getTranslation().x;
 
