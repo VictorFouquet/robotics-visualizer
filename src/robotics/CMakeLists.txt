@@ -1,4 +1,5 @@
 add_library(robotics
+    armComponent.cpp
     prismaticRevolute.cpp
     revolutePrismatic.cpp
     revoluteRevolute.cpp
