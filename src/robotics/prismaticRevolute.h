@@ -1,21 +1,22 @@
 #pragma once
 
 #include "robotArm.h"
+#include "circle.h"
 
-class RevolutePrismatic : public RobotArm
+class PrismaticRevolute : virtual public RobotArm
 {
 public:
-    RevolutePrismatic() = default;
-    RevolutePrismatic(
+    PrismaticRevolute() = default;
+    PrismaticRevolute(
         std::vector<std::shared_ptr<ArmComponent>> components,
         float weightLink1=1.f, float weightLink2=1.f
     );
-    ~RevolutePrismatic() = default;
+    ~PrismaticRevolute() = default;
 
     virtual std::vector<std::shared_ptr<ArmComponent>> getRigidBodies() override { return { m_rigidBodies[0], m_rigidBodies[1] }; }
     virtual std::vector<std::shared_ptr<ArmComponent>> getJointComponents() override { return m_jointComponents; } 
     virtual std::shared_ptr<ArmComponent> getEndEffectorComponent() override { return m_endEffComponent; }
-
+    
     virtual void actuateJoints(std::vector<float>) override;
 
     virtual std::vector<float> inverseKinematics(float x, float y) override;
@@ -25,5 +26,5 @@ public:
 private:
     static bool compareDelta(std::vector<float> a, std::vector<float> b);
 private:
-    float m_phi, m_delta, m_weightLink1, m_weightLink2;
+    float m_delta, m_phi, m_weightLink1, m_weightLink2;
 };

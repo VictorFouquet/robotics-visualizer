@@ -3,42 +3,41 @@
 #include <assert.h>
 #include <algorithm>
 
-#ifndef PI
-#define PI 3.14159265
-#endif
 
-static float rad(float n)
+RevoluteRevolute::RevoluteRevolute(std::vector<std::shared_ptr<ArmComponent>> components, 
+    float weightLink1, float weightLink2)
 {
-    return 2 * PI * (n / 360);
-}
+    m_weightLink1 = weightLink1;
+    m_weightLink2 = weightLink2;
+    m_components = components;
 
-RevoluteRevolute::RevoluteRevolute(float lenghtLink1, float lenghtLink2, float theta, float phi, float weightLink1, float weightLink2)
-    : m_lenghtLink1(lenghtLink1), m_lenghtLink2(lenghtLink2), m_theta(theta), m_phi(phi), m_weightLink1(weightLink1), m_weightLink2(weightLink2)
-{
-    std::vector<float> links = { phi, theta };
-    m_rotations = { theta, phi };
-    actuateJoints(links);
+    for (auto component : m_components)
+    {
+        if (component->isType(ArmComponentType::rigidBody))
+            m_rigidBodies.push_back(component);
+        if (component->isType(ArmComponentType::joint))
+            m_jointComponents.push_back(component);
+        if (component->isType(ArmComponentType::endEffector))
+            m_endEffComponent = component;
+        component->setGlobalTransform();
+    }
+
+    m_lengthLink1 = m_rigidBodies[0]->getTranslation().x;
+    m_lengthLink2 = m_rigidBodies[1]->getTranslation().x;
+
+    m_phi = m_jointComponents[0]->getRotation().z;
+    m_theta = m_jointComponents[1]->getRotation().z;
 }
 
 void RevoluteRevolute::actuateJoints(std::vector<float> links) 
 {
-    m_rotations = links;
-    Matrix m1 = Matrix::rotate(0.f, 0.f, links[0]) * Matrix::translate(m_lenghtLink1, 0.f, 0.f);
-    Matrix m2 = Matrix::rotate(0.f, 0.f, links[1]) * Matrix::translate(m_lenghtLink2, 0.f, 0.f);
-    Matrix m3 = m1 * m2;
+    m_jointComponents[0]->setRotation(Vector3d(0.f, 0.f, links[0]));
+    m_jointComponents[0]->setLocalTransform();
+    m_jointComponents[1]->setRotation(Vector3d(0.f, 0.f, links[1]));
+    m_jointComponents[1]->setLocalTransform();
 
-    Vector3d p1(0.f, 0.f, 0.f);
-
-    m_endEffector = m3 * p1;
-
-    m_transforms = { m1, m2, m3 };
-    m_joints = { Vector3d(0.f, 0.f, 0.f), m1 * p1 };
-
-    Vector3d p2(0.f, 0.f, 0.f);
-    p2 = m1 * p1;
-    std::pair<Vector3d, Vector3d> link1 = { p1, p2 };
-    std::pair<Vector3d, Vector3d> link2 = { p2, m_endEffector };
-    m_links = { link1, link2 };
+    for (auto component : m_components)
+        component->setGlobalTransform();
 }
 
 std::vector<float> RevoluteRevolute::inverseKinematics(float x, float y) 
@@ -46,8 +45,8 @@ std::vector<float> RevoluteRevolute::inverseKinematics(float x, float y)
     Vector3d endEffectorVector = Vector3d(x, y);
     Vector3d u1 = Vector3d(), u2 = Vector3d();
 
-    Geometry::Circle c1(m_lenghtLink1, Vector3d(0.f, 0.f));
-    Geometry::Circle c2(m_lenghtLink2, Vector3d(x, y));
+    Geometry::Circle c1(m_lengthLink1, Vector3d(0.f, 0.f));
+    Geometry::Circle c2(m_lengthLink2, Vector3d(x, y));
 
     c1.getIntersectionPointsWithCircle(c2, u1, u2);
 
@@ -69,7 +68,7 @@ std::vector<float> RevoluteRevolute::inverseKinematics(float x, float y)
 
     std::vector<float> values = { 
         theta1, phi1,
-        theta2, phi2,
+        theta2, phi2
     };
 
     return values;
@@ -88,29 +87,34 @@ std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x,
     float theta2 = values[2];
     float phi2 = values[3];
 
+    float joint1Rot = m_jointComponents[0]->getRotation().z;
+    Vector3d joint1Pos = m_jointComponents[0]->getTransformedPoints()[0];
+    float joint2Rot = m_jointComponents[1]->getRotation().z;
+    Vector3d joint2Pos = m_jointComponents[1]->getTransformedPoints()[0];
+    Vector3d endEffectorPos = m_endEffComponent->getTransformedPoints()[0];
 
-    float dt1A = theta1 - m_rotations[0];
-    float dt1B = theta1 - m_rotations[0] - 360.f;
-    float dt2A = theta2 - m_rotations[0];
-    float dt2B = theta2 - m_rotations[0] - 360.f;
-    float dp1A = phi1   - m_rotations[1];
-    float dp1B = phi1   - m_rotations[1] - 360.f;
-    float dp2A = phi2   - m_rotations[1];
-    float dp2B = phi2   - m_rotations[1] - 360.f;
+    float dt1A = theta1 - joint1Rot;
+    float dt1B = theta1 - joint1Rot - 360.f;
+    float dt2A = theta2 - joint1Rot;
+    float dt2B = theta2 - joint1Rot - 360.f;
+    float dp1A = phi1   - joint2Rot;
+    float dp1B = phi1   - joint2Rot - 360.f;
+    float dp2A = phi2   - joint2Rot;
+    float dp2B = phi2   - joint2Rot - 360.f;
 
-    if (m_joints[1].y < 0)
+    if (joint2Pos.y < 0)
     {
-        dt1A = 360 - m_rotations[0] + theta1;
+        dt1A = 360 - joint1Rot + theta1;
         dt1B = -360.f + dt1A;
-        dt2A = 360.f - m_rotations[0] + theta2;
+        dt2A = 360.f - joint1Rot + theta2;
         dt2B = -360.f + dt2A;
     }
-    int orientation = m_joints[0].orientation(m_joints[1], m_endEffector);
-    if (m_joints[0].orientation(m_joints[1], m_endEffector) > 0)
+    int orientation = joint1Pos.orientation(joint2Pos, endEffectorPos);
+    if (joint1Pos.orientation(joint2Pos, endEffectorPos) > 0)
     {
-        dp1A = 360 - m_rotations[1] + phi1;
+        dp1A = 360 - joint2Rot + phi1;
         dp1B = -360.f + dp1A;
-        dp2A = 360.f - m_rotations[1] + phi2;
+        dp2A = 360.f - joint2Rot + phi2;
         dp2B = -360.f + dp2A;
     }
 
@@ -133,7 +137,9 @@ std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(float x, float 
 {
     std::vector<std::vector<Vector3d>> retData = { };
     
-    float theta = m_rotations[0], phi = m_rotations[1];
+    float theta = m_jointComponents[0]->getRotation().z, phi = m_jointComponents[1]->getRotation().z;
+    float joint1Rot = m_jointComponents[0]->getRotation().z;
+    float joint2Rot = m_jointComponents[1]->getRotation().z;
 
     std::vector<std::vector<float>> deltas = getDeltasBetweenPoses(x, y);
     float deltaT = deltas[0][0], deltaP = deltas[0][1];
@@ -147,21 +153,26 @@ std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(float x, float 
         if (i%step == 0)
         {
             std::vector<Vector3d> stepToRender = { Vector3d(0.f, 0.f, 0.f) };
+            joint1Rot = m_jointComponents[0]->getRotation().z;
+            joint2Rot = m_jointComponents[1]->getRotation().z;
+            float rotA = joint1Rot + unitDeltaT;
+            float rotB = joint2Rot + unitDeltaP;
+            if (rotA < 0.f)
+                rotA += 360.f;
+            if (rotB < 0.f)
+                rotB += 360.f;
+            if (rotA > 360.f)
+                rotA = fmod(rotA, 360.f);
+            if (rotB < 0.f)
+                rotB = fmod(rotB, 360.f);
+            
+            actuateJoints({ rotA, rotB });
+            Vector3d joint2Pos = m_jointComponents[1]->getTransformedPoints()[0];
+            Vector3d endEffPos = m_endEffComponent->getTransformedPoints()[0];
 
-            float roatA = m_rotations[0] + unitDeltaT;
-            float roatB = m_rotations[1] + unitDeltaP;
-            if (roatA < 0.f)
-                roatA += 360.f;
-            if (roatB < 0.f)
-                roatB += 360.f;
-            if (roatA > 360.f)
-                roatA = fmod(roatA, 360.f);
-            if (roatB < 0.f)
-                roatB = fmod(roatB, 360.f);
-            actuateJoints({ roatA, roatB });
-            stepToRender.push_back(Vector3d(m_joints[1].x, m_joints[1].y, 0.f));
-            stepToRender.push_back(Vector3d(m_endEffector.x, m_endEffector.y, 0.f));
-            stepToRender.push_back(Vector3d(roatA, roatB, 0.f));
+            stepToRender.push_back(Vector3d(joint2Pos.x, joint2Pos.y, 0.f));
+            stepToRender.push_back(Vector3d(endEffPos.x, endEffPos.y, 0.f));
+            stepToRender.push_back(Vector3d(rotA, rotB, 0.f));
             retData.push_back(stepToRender);
         }
         theta += unitDeltaT;
@@ -178,8 +189,11 @@ std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(float x, float 
         actuateJoints(rotate);
     }
     std::vector<Vector3d> stepToRender = { Vector3d(0.f, 0.f, 0.f) };
-    stepToRender.push_back(Vector3d(m_joints[1].x, m_joints[1].y, 0.f));
-    stepToRender.push_back(Vector3d(m_endEffector.x, m_endEffector.y, 0.f));
+    Vector3d joint2Pos = m_jointComponents[1]->getTransformedPoints()[0];
+    Vector3d endEffPos = m_endEffComponent->getTransformedPoints()[0];
+
+    stepToRender.push_back(Vector3d(joint2Pos.x, joint2Pos.y, 0.f));
+    stepToRender.push_back(Vector3d(endEffPos.x, endEffPos.y, 0.f));
     stepToRender.push_back(Vector3d(theta, phi, 0.f));
     retData.push_back(stepToRender);
 

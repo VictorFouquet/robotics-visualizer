@@ -50,4 +50,37 @@ namespace Geometry
         ip1.y = p2.y - ( h * (c.getCenter().x - m_center.x) / d );
         ip2.y = p2.y + ( h * (c.getCenter().x - m_center.x) / d );
     }
+    
+    void Circle::getIntersectionPointsWithSegment(Vector3d va, Vector3d vb, Vector3d& p1, Vector3d& p2) 
+    {
+        // Ressource and proof can be founb here : https://newbedev.com/get-location-of-vector-circle-intersection
+        
+        // Circle equation = (x - h)² + (y - k)² = r²
+        // Center = (h , k), r = radius
+        float h = m_center.x, k = m_center.y, r = m_radius;
+        // Vector has starting point (ax, ay) and ending point (bx, by)
+        float ax = va.x, ay = va.y, bx = vb.x, by = vb.y;
+        // Parametric equation for point on vector :
+        // x(t) = (bx - ax)t + ax
+        // y(t) = (by - ay)t + ay
+        // Substitute x and y in circle equation by parametric equations :
+        // ((bx - ax)t + ax - h)² + ((by - ay)t + ay - k)² = r²
+        // Collect terms in form at² + bt + c = 0
+        // Where:
+        // a = (bx - ax)² + (by - ay)²
+        float a = std::pow((bx - ax), 2) + std::pow((by - ay), 2);
+        // b = 2(bx - ax)(ax - h) + 2(by - ay)(ay - k)
+        float b = 2 * (bx - ax) * (ax - h) + 2 * (by - ay) * (ay - k);
+        // c = (ax - h)² + (ay - k)² - r²
+        float c = std::pow((ax - h), 2) + std::pow((ay - k), 2) - std::pow(r, 2);
+        // Then t1 = (-b + sqrt(b² - 4ac)) / 2a
+        float t1 = (-b + std::sqrt(std::pow(b, 2) - 4 * a * c)) / (2 * a);
+        // And  t2 = (-b - sqrt(b² - 4ac)) / 2a
+        float t2 = (-b - std::sqrt(std::pow(b, 2) - 4 * a * c)) / (2 * a);
+        // Finally using parametric equations intersections points are (x(t1), y(t1)), (x(t2), y(t2))
+        p1.x = (bx - ax) * t1 + ax;
+        p1.y = (by - ay) * t1 + ay;
+        p2.x = (bx - ax) * t2 + ax;
+        p2.y = (by - ay) * t2 + ay;
+    }
 }

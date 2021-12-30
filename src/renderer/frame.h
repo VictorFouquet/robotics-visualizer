@@ -21,6 +21,7 @@ public:
 
     void addArc(int x, int y, float r, float theta, float phi, float width);
     void addCircle(int x, int y, float r);
+    void addCircle(int x, int y, float radius, float r, float g, float b, float a=255.f);
     void addCircleBorder(int x, int y, float r, float width);
     void addLine(int p1x, int p1y, int p2x, int p2y);
     void addPolygon();

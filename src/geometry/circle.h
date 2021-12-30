@@ -15,6 +15,7 @@ namespace Geometry
         float getRadius() { return m_radius; }
 
         void getIntersectionPointsWithCircle(Circle c, Vector3d& p1, Vector3d& p2);
+        void getIntersectionPointsWithSegment(Vector3d a, Vector3d b, Vector3d& p1, Vector3d& p2);
     private:
         float m_radius;
         Vector3d m_center;

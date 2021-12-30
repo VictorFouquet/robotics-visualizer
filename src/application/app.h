@@ -4,6 +4,7 @@
 #include "window.h"
 
 #include "robotArm.h"
+#include "prismaticRevolute.h"
 #include "revoluteRevolute.h"
 #include "revolutePrismatic.h"
 
@@ -32,9 +33,18 @@ private:
     Frame computeRPFrame(std::vector<Vector3d> step, Frame frame) ;
     void handleRPClick(float x, float y);
 
+    Frame computePRFrame(std::vector<Vector3d> step, Frame frame);
+    void handlePRClick(float x, float y);
+
+    void createRobots();
+    void createRR();
+    void createRP();
+    void createPR();
+
     void updateRobot();
     void updateRR();
     void updateRP();
+    void updatePR();
 
 private:
     int m_windowWidth = 800, m_windowHeight = 600;
@@ -46,9 +56,11 @@ private:
     
     GUI m_gui = GUI();
     RobotArm* m_robot;
-    RevoluteRevolute m_derivedRR = RevoluteRevolute(100.f, 50.f, 0.f, 0.f, 20.f, 1.f);
-    RevolutePrismatic m_derivedRP = RevolutePrismatic(75.f, 10.f, 0.f, 0.f, 1.f, 1.f);
+    PrismaticRevolute m_derivedPR = PrismaticRevolute();
+    RevolutePrismatic m_derivedRP = RevolutePrismatic();
+    RevoluteRevolute m_derivedRR  = RevoluteRevolute();
 
     bool m_RRActivated = false;
     bool m_RPActivated = false;
+    bool m_PRActivated = false;
 };
