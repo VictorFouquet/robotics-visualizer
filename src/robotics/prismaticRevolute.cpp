@@ -75,6 +75,7 @@ std::vector<std::vector<float>> PrismaticRevolute::getDeltasBetweenPoses(float x
 
     float joint1Trans = m_jointComponents[0]->getTranslation().x;
     float joint2Rot = m_jointComponents[1]->getRotation().z;
+    Vector3d joint2Pos = m_jointComponents[1]->getTransformedPoints()[0];
 
     float dd1  = values[0] - joint1Trans;
     float dp1A = values[1] - joint2Rot;
@@ -86,12 +87,12 @@ std::vector<std::vector<float>> PrismaticRevolute::getDeltasBetweenPoses(float x
 
     std::vector<std::vector<float>> deltas = {};
 
-    if ((values[0] + m_lengthLink1) < m_lengthLink1 + m_maxJoint1)
+    if (((values[0] + m_lengthLink1) < m_lengthLink1 + m_maxJoint1) && joint2Pos.y + dd1 >= 120.f)
     {
         deltas.push_back({ dd1, dp1A, std::abs(dd1) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 });
         deltas.push_back({ dd1, dp1B, std::abs(dd1) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 });
     }
-    if ((values[2] + m_lengthLink1) < m_lengthLink1 + m_maxJoint1)
+    if (((values[2] + m_lengthLink1) < m_lengthLink1 + m_maxJoint1) && joint2Pos.y + dd2 >= 120.f)
     {
         deltas.push_back({ dd2, dp2A, std::abs(dd2) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 });
         deltas.push_back({ dd2, dp2B, std::abs(dd2) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 });
