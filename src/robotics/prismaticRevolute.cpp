@@ -78,10 +78,11 @@ std::vector<std::vector<float>> PrismaticRevolute::getDeltasBetweenPoses(float x
 
     float dd1  = values[0] - joint1Trans;
     float dp1A = values[1] - joint2Rot;
-    float dp1B = values[1] - joint2Rot - 360.f;
+    float dp1B = dp1A + (dp1A < 0.f ? 360.f : -361.f);
     float dd2  = values[2] - joint1Trans;
     float dp2A = values[3] - joint2Rot;
-    float dp2B = values[3] - joint2Rot - 360.f;
+    float dp2B = dp2A + (dp2A < 0.f ? 360.f : -361.f);
+
 
     std::vector<std::vector<float>> deltas = {};
 
@@ -143,9 +144,9 @@ std::vector<std::vector<Vector3d>> PrismaticRevolute::interpolate(float x, float
         phi += unitDeltaP;
         delta += unitDeltaD;
 
-        if (phi < 0) phi += 360.f;
-        if (phi > 360.f)
-            phi = fmod(phi, 360.f);
+        if (delta < 0) delta += 360.f;
+        if (delta > 360.f)
+            delta = fmod(delta, 360.f);
         std::vector<float> rotate = { phi, delta };
         
         actuateJoints(rotate);
