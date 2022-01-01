@@ -104,6 +104,7 @@ Frame App::computeFrameComponents(std::vector<Vector3d> step)
         return computeRPFrame(step, frame);
     else if (m_view == 3)
         return computePRFrame(step, frame);
+    
     return frame;
 }
 
@@ -118,13 +119,17 @@ void App::computeRobotBaseFrame()
     {
         baseFrame = { 
             m_robot->getJointComponents()[0]->getTransformedPoints()[0],
-            m_robot->getJointComponents()[1]->getTransformedPoints()[0],
-            m_robot->getEndEffectorComponent()->getTransformedPoints()[0],
+            m_robot->getJointComponents()[1]->getTransformedPoints()[0]
+        };
+        std::vector<Vector3d> endEff = m_robot->getEndEffectorComponent()->getTransformedPoints();
+        for (auto p : endEff)
+            baseFrame.push_back(p);
+        baseFrame.push_back(
             Vector3d(
                 m_robot->getJointComponents()[0]->getRotation().z,
                 m_robot->getJointComponents()[1]->getRotation().z
             )
-        };
+        );
     }
     else if (m_view == 2)
     {
@@ -159,7 +164,7 @@ void App::computeRobotBaseFrame()
 }
 
 Frame App::computeRRFrame(std::vector<Vector3d> step, Frame frame)
-{  
+{
     frame.addCircle(m_windowWidth / 2 + step[0].x, m_windowHeight / 2 + step[0].y, 10);
     frame.addCircle(m_windowWidth / 2 + step[1].x, m_windowHeight / 2 - step[1].y, 10);
     frame.addCircle(m_windowWidth / 2 + step[2].x, m_windowHeight / 2 - step[2].y, 10);
@@ -172,14 +177,22 @@ Frame App::computeRRFrame(std::vector<Vector3d> step, Frame frame)
         m_windowWidth / 2 + step[2].x, m_windowHeight / 2 - step[2].y
     );
 
+    std::vector<Vector3d> endEffPoints = m_robot->getEndEffectorComponent()->getTransformedPoints();
+    for (int i = 2; i < step.size() - 1; i+=2)
+        frame.addLine(
+            m_windowWidth / 2 + step[i].x, m_windowHeight / 2 - step[i].y,
+            m_windowWidth / 2 + step[i+1].x, m_windowHeight / 2 - step[i+1].y
+        );
+
     int i = 1;
-    frame.addMessage("a1: " + std::to_string(step[3].x), "roboto.ttf", 500, 100 + i * 15, 12);
+    frame.addMessage("a1: " + std::to_string(step.back().x), "roboto.ttf", 500, 100 + i * 15, 12);
     i++;
-    frame.addMessage("a2: " + std::to_string(step[3].y), "roboto.ttf", 500, 100 + i * 15, 12);
+    frame.addMessage("a2: " + std::to_string(step.back().y), "roboto.ttf", 500, 100 + i * 15, 12);
     i++;
 
     frame.addCircleBorder(m_windowWidth / 2, m_windowHeight / 2, 150.f, 100.f);
 
+    frame.addRectangle(20, 20, 300, 100, 255, 255, 255);
     return frame;
 }
 
@@ -206,7 +219,7 @@ Frame App::computeRPFrame(std::vector<Vector3d> step, Frame frame)
         m_windowWidth / 2 + prismaticJoint[0].x, m_windowHeight / 2 - prismaticJoint[0].y,
         m_windowWidth / 2 + prismaticJoint[1].x, m_windowHeight / 2 - prismaticJoint[1].y
     );
-
+    
     int i = 1;
     frame.addMessage("a1: " + std::to_string(step[3].x), "roboto.ttf", 500, 100 + i * 15, 12);
     i++;
@@ -293,7 +306,7 @@ void App::handleRRClick(float x, float y)
     float dist = std::sqrt(x * x + y * y);
     if (dist > 50.f && dist < 150.f)
     {
-        std::vector<std::vector<Vector3d>> stepsToRender = m_robot->interpolate(x, y, 5);
+        std::vector<std::vector<Vector3d>> stepsToRender = m_robot->interpolate(Vector3d(x, y), 0.f, 5);
         for (auto step : stepsToRender)
         {
             Frame frame = computeFrameComponents(step);
@@ -470,13 +483,18 @@ void App::createRR()
         Vector3d(),
         Vector3d(),
         { Vector3d() },
-        ArmComponentType::fixed
+        ArmComponentType::revolute
     );
 
     ArmComponent endEff = ArmComponent(
         Vector3d(),
         Vector3d(),
-        { Vector3d() },
+        {
+            Vector3d(), Vector3d(20.f, 0.f),
+            Vector3d(20.f, 10.f), Vector3d(20.f, -10.f),
+            Vector3d(20.f, 10.f), Vector3d(30.f, 10.f),
+            Vector3d(20.f, -10.f), Vector3d(30.f, -10.f)
+        },
         ArmComponentType::endEffector
     );
 
