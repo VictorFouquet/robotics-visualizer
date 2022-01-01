@@ -40,9 +40,17 @@ public:
 
     virtual void actuateJoints(std::vector<float>) {};
     virtual std::vector<float> inverseKinematics(float x, float y) { return {}; }
+    //
+    virtual std::vector<std::vector<float>> inverseKinematics(float x, float y, float rotz) { return {}; }
+
     virtual std::vector<float> getRotations() const { return m_rotations; }
     virtual std::vector<std::vector<float>> getDeltasBetweenPoses(float x, float y) { return {}; }
+    //
+    virtual std::vector<std::vector<float>> getDeltasBetweenPoses(float x, float y, float rotz) { return {}; } 
+
     virtual std::vector<std::vector<Vector3d>> interpolate(float x, float y, int step) { return {}; }
+    //
+    virtual std::vector<std::vector<Vector3d>> interpolate(Vector3d pos, float rot, int step) { return {}; }
 
 protected:
     std::vector<std::shared_ptr<ArmComponent>> m_components;
@@ -50,7 +58,7 @@ protected:
     std::vector<std::shared_ptr<ArmComponent>> m_jointComponents;
     std::shared_ptr<ArmComponent> m_endEffComponent;
 
-    float m_lengthLink1, m_lengthLink2;
+    float m_lengthLink1, m_lengthLink2, m_endEffectorLength;
     float m_maxJoint1, m_maxJoint2;
     
     std::vector<Matrix> m_transforms;
