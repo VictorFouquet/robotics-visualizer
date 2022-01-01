@@ -16,15 +16,9 @@ public:
     virtual void actuateJoints(std::vector<float>) override;
 
     void rotateLink(int link, int theta);
-    virtual std::vector<float> inverseKinematics(float x, float y) override;
-    //
-    virtual std::vector<std::vector<float>> inverseKinematics(float x, float y, float rotz) override;
-    virtual std::vector<std::vector<float>> getDeltasBetweenPoses(float x, float y) override;
-    //
-    virtual std::vector<std::vector<float>> getDeltasBetweenPoses(float x, float y, float rotz) override;
 
-    virtual std::vector<std::vector<Vector3d>> interpolate(float x, float y, int step) override;
-    //
+    virtual std::vector<std::vector<float>> inverseKinematics(float x, float y, float rotz) override;
+    virtual std::vector<std::vector<float>> getDeltasBetweenPoses(float x, float y, float rotz) override;
     virtual std::vector<std::vector<Vector3d>> interpolate(Vector3d pos, float rot, int step) override;
 
     virtual std::vector<std::shared_ptr<ArmComponent>> getRigidBodies() override { return { m_rigidBodies[0], m_rigidBodies[1] }; }

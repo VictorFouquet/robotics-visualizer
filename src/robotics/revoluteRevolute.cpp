@@ -48,45 +48,10 @@ void RevoluteRevolute::actuateJoints(std::vector<float> links)
         component->setGlobalTransform();
 }
 
-std::vector<float> RevoluteRevolute::inverseKinematics(float x, float y) 
-{
-    Vector3d endEffectorVector = Vector3d(x, y);
-    Vector3d u1 = Vector3d(), u2 = Vector3d();
-
-    Geometry::Circle c1(m_lengthLink1, Vector3d(0.f, 0.f));
-    Geometry::Circle c2(m_lengthLink2, Vector3d(x, y));
-
-    c1.getIntersectionPointsWithCircle(c2, u1, u2);
-
-    Vector3d v1 = endEffectorVector - u1;
-    Vector3d v2 = endEffectorVector - u2;
-
-    float theta1 = Vector3d(1.f, 0.f).angleToVector(u1) * 180.f / 3.14;
-    float theta2 = Vector3d(1.f, 0.f).angleToVector(u2) * 180.f / 3.14;
-    if (u1.y < 0)
-    {
-        theta1 = 360.f - theta1;
-    }
-    if (u2.y < 0)
-    {
-        theta2 = 360.f - theta2;
-    }
-    float phi1 = v1.angleToVector(u1) * 180.f / 3.14;
-    float phi2 = 360.f - phi1;
-
-    std::vector<float> values = { 
-        theta1, phi1,
-        theta2, phi2
-    };
-
-    return values;
-}
-
 std::vector<std::vector<float>> RevoluteRevolute::inverseKinematics(float x, float y, float rotz) 
 {
     Matrix m = Matrix::translate(x, y, 0.f) * Matrix::rotate(0.f, 0.f, rotz) *  Matrix::identity();
 
-    // Computes the 4 different wrist Z rotations that will align gripper with the target's orientation
     float rot0Z = rotz, rot1Z = rotz + 90.f, rot2Z = rotz + 180.f, rot3Z = rotz + 270.f;
     if (rot0Z > 360.f) rot0Z = fmod(rot0Z, 360.f);
     if (rot1Z > 360.f) rot1Z = fmod(rot1Z, 360.f);
@@ -95,15 +60,17 @@ std::vector<std::vector<float>> RevoluteRevolute::inverseKinematics(float x, flo
 
     std::vector<std::vector<Vector3d>> poses = {
         { m * Vector3d(-m_endEffectorLength, 0.f), Vector3d(0.f, 0.f, rot0Z) },
-        // { m * Vector3d(0.f, -m_endEffectorLength), Vector3d(0.f, 0.f, rot1Z) },
-        // { m * Vector3d(m_endEffectorLength, 0.f),  Vector3d(0.f, 0.f, rot2Z) },
-        // { m * Vector3d(0.f, m_endEffectorLength),  Vector3d(0.f, 0.f, rot3Z) }
+        { m * Vector3d(0.f, -m_endEffectorLength), Vector3d(0.f, 0.f, rot1Z) },
+        { m * Vector3d(m_endEffectorLength, 0.f),  Vector3d(0.f, 0.f, rot2Z) },
+        { m * Vector3d(0.f, m_endEffectorLength),  Vector3d(0.f, 0.f, rot3Z) }
     };
 
     std::vector<std::vector<float>> values = {};
     for (auto pose : poses)
     {
-        if (pose[0].magnitude() < (m_lengthLink1 + m_lengthLink2))
+        int pMag = pose[0].magnitude();
+        int maxL = m_lengthLink1 + m_lengthLink2;
+        if (pMag < maxL)
         {
             Vector3d endEffectorVector = Vector3d(pose[0].x, pose[0].y);
             Vector3d u1 = Vector3d(), u2 = Vector3d();
@@ -112,6 +79,9 @@ std::vector<std::vector<float>> RevoluteRevolute::inverseKinematics(float x, flo
             Geometry::Circle c2(m_lengthLink2, Vector3d(pose[0].x, pose[0].y));
 
             c1.getIntersectionPointsWithCircle(c2, u1, u2);
+
+            if (u1.x + u2.x + u1.y + u2.y == 0)
+                continue;
 
             Vector3d v1 = endEffectorVector - u1;
             Vector3d v2 = endEffectorVector - u2;
@@ -156,63 +126,7 @@ std::vector<std::vector<float>> RevoluteRevolute::inverseKinematics(float x, flo
 
 bool RevoluteRevolute::compareDelta(std::vector<float> a, std::vector<float> b)
 {
-    if (a.size() == 3)
-        return a[2] < b[2];
-    return a[3] < b[3];
-}
-
-std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x, float y) 
-{ 
-    std::vector<float> values = inverseKinematics(x, y);
-    float theta1 = values[0];
-    float phi1 = values[1];
-    float theta2 = values[2];
-    float phi2 = values[3];
-
-    float joint1Rot = m_jointComponents[0]->getRotation().z;
-    Vector3d joint1Pos = m_jointComponents[0]->getTransformedPoints()[0];
-    float joint2Rot = m_jointComponents[1]->getRotation().z;
-    Vector3d joint2Pos = m_jointComponents[1]->getTransformedPoints()[0];
-    Vector3d endEffectorPos = m_endEffComponent->getTransformedPoints()[0];
-
-    float dt1A = theta1 - joint1Rot;
-    float dt1B = theta1 - joint1Rot - 360.f;
-    float dt2A = theta2 - joint1Rot;
-    float dt2B = theta2 - joint1Rot - 360.f;
-    float dp1A = phi1   - joint2Rot;
-    float dp1B = phi1   - joint2Rot - 360.f;
-    float dp2A = phi2   - joint2Rot;
-    float dp2B = phi2   - joint2Rot - 360.f;
-
-    if (joint2Pos.y < 0)
-    {
-        dt1A = 360 - joint1Rot + theta1;
-        dt1B = -360.f + dt1A;
-        dt2A = 360.f - joint1Rot + theta2;
-        dt2B = -360.f + dt2A;
-    }
-    int orientation = joint1Pos.orientation(joint2Pos, endEffectorPos);
-    if (joint1Pos.orientation(joint2Pos, endEffectorPos) > 0)
-    {
-        dp1A = 360 - joint2Rot + phi1;
-        dp1B = -360.f + dp1A;
-        dp2A = 360.f - joint2Rot + phi2;
-        dp2B = -360.f + dp2A;
-    }
-
-    std::vector<std::vector<float>> deltas{
-        { dt1A, dp1A, std::abs(dt1A) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 },
-        { dt1A, dp1B, std::abs(dt1A) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 },
-        { dt1B, dp1A, std::abs(dt1B) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 },
-        { dt1B, dp1B, std::abs(dt1B) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 },
-        { dt2A, dp2A, std::abs(dt2A) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 },
-        { dt2A, dp2B, std::abs(dt2A) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 },
-        { dt2B, dp2A, std::abs(dt2B) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 },
-        { dt2B, dp2B, std::abs(dt2B) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 },
-    };
-    std::sort(deltas.begin(), deltas.end(), compareDelta);
-
-    return deltas;
+    return a.back() < b.back();
 }
 
 std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x, float y, float rotz) 
@@ -220,151 +134,85 @@ std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x,
     std::vector<std::vector<float>> deltas = {};
 
     std::vector<std::vector<float>> vals = inverseKinematics(x, y, rotz);
-    std::vector<float> values = vals[0];
-
-    float theta1 = values[0];
-    float phi1   = values[1];
-    float gamma1 = values[2]; 
-    float theta2 = values[3];
-    float phi2   = values[4];
-    float gamma2 = values[5];
-
-    float joint1Rot = m_jointComponents[0]->getRotation().z;
-    Vector3d joint1Pos = m_jointComponents[0]->getTransformedPoints()[0];
-    float joint2Rot = m_jointComponents[1]->getRotation().z;
-    Vector3d joint2Pos = m_jointComponents[1]->getTransformedPoints()[0];
-    float joint3Rot = m_jointComponents[2]->getRotation().z;
-    Vector3d joint3Pos = m_jointComponents[2]->getTransformedPoints()[0];
-    Vector3d endEffectorPos = m_endEffComponent->getTransformedPoints()[0];
-
-    float dt1A = theta1 - joint1Rot;
-    float dt1B = theta1 - joint1Rot - 360.f;
-    float dt2A = theta2 - joint1Rot;
-    float dt2B = theta2 - joint1Rot - 360.f;
-    float dp1A = phi1   - joint2Rot;
-    float dp1B = phi1   - joint2Rot - 360.f;
-    float dp2A = phi2   - joint2Rot;
-    float dp2B = phi2   - joint2Rot - 360.f;
-    float dg1A = gamma1 - joint3Rot;
-    float dg1B = gamma1 - joint3Rot - 360.f;
-    float dg2A = gamma2 - joint3Rot;
-    float dg2B = gamma2 - joint3Rot - 360.f;
-
-    if (joint2Pos.y < 0)
+    for (auto values : vals)
     {
-        dt1A = 360 - joint1Rot + theta1;
-        dt1B = -360.f + dt1A;
-        dt2A = 360.f - joint1Rot + theta2;
-        dt2B = -360.f + dt2A;
+        float theta1 = values[0];
+        float phi1   = values[1];
+        float gamma1 = values[2]; 
+        float theta2 = values[3];
+        float phi2   = values[4];
+        float gamma2 = values[5];
+
+        float joint1Rot = m_jointComponents[0]->getRotation().z;
+        Vector3d joint1Pos = m_jointComponents[0]->getTransformedPoints()[0];
+        float joint2Rot = m_jointComponents[1]->getRotation().z;
+        Vector3d joint2Pos = m_jointComponents[1]->getTransformedPoints()[0];
+        float joint3Rot = m_jointComponents[2]->getRotation().z;
+        Vector3d joint3Pos = m_jointComponents[2]->getTransformedPoints()[0];
+        Vector3d endEffectorPos = m_endEffComponent->getTransformedPoints()[0];
+
+        float dt1A = theta1 - joint1Rot;
+        float dt1B = theta1 - joint1Rot - 360.f;
+        float dt2A = theta2 - joint1Rot;
+        float dt2B = theta2 - joint1Rot - 360.f;
+        float dp1A = phi1   - joint2Rot;
+        float dp1B = phi1   - joint2Rot - 360.f;
+        float dp2A = phi2   - joint2Rot;
+        float dp2B = phi2   - joint2Rot - 360.f;
+        float dg1A = gamma1 - joint3Rot;
+        float dg1B = gamma1 - joint3Rot - 360.f;
+        float dg2A = gamma2 - joint3Rot;
+        float dg2B = gamma2 - joint3Rot - 360.f;
+
+        if (joint2Pos.y < 0)
+        {
+            dt1A = 360 - joint1Rot + theta1;
+            dt1B = -360.f + dt1A;
+            dt2A = 360.f - joint1Rot + theta2;
+            dt2B = -360.f + dt2A;
+        }
+
+        int orientation = joint1Pos.orientation(joint2Pos, endEffectorPos);
+        if (joint1Pos.orientation(joint2Pos, endEffectorPos) > 0)
+        {
+            dp1A = 360 - joint2Rot + phi1;
+            dp1B = -360.f + dp1A;
+            dp2A = 360.f - joint2Rot + phi2;
+            dp2B = -360.f + dp2A;
+        }
+
+        if (joint2Pos.orientation(endEffectorPos, Vector3d(x, y)) > 0)
+        {
+            dg1A = 360 - joint3Rot + gamma1;
+            dg1B = -360.f + dg1A;
+            dg2A = 360.f - joint3Rot + gamma2;
+            dg2B = -360.f + dg2A;
+        }
+
+        deltas.push_back( { dt1A, dp1A, dg1A, std::abs(dt1A) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 + std::abs(dg1A) } );
+        deltas.push_back( { dt1A, dp1A, dg1B, std::abs(dt1A) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 + std::abs(dg1B) } );
+        deltas.push_back( { dt1A, dp1B, dg1A, std::abs(dt1A) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 + std::abs(dg1A) } );
+        deltas.push_back( { dt1A, dp1B, dg1B, std::abs(dt1A) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 + std::abs(dg1B) } );
+
+        deltas.push_back( { dt1B, dp1A, dg1A, std::abs(dt1B) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 + std::abs(dg1A) } );
+        deltas.push_back( { dt1B, dp1A, dg1B, std::abs(dt1B) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 + std::abs(dg1B) } );
+        deltas.push_back( { dt1B, dp1B, dg1A, std::abs(dt1B) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 + std::abs(dg1A) } );
+        deltas.push_back( { dt1B, dp1B, dg1B, std::abs(dt1B) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 + std::abs(dg1B) } );
+
+        deltas.push_back( { dt2A, dp2A, dg2A, std::abs(dt2A) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 + std::abs(dg2A) } );
+        deltas.push_back( { dt2A, dp2A, dg2B, std::abs(dt2A) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 + std::abs(dg2B) } );
+        deltas.push_back( { dt2A, dp2B, dg2A, std::abs(dt2A) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 + std::abs(dg2A) } );
+        deltas.push_back( { dt2A, dp2B, dg2B, std::abs(dt2A) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 + std::abs(dg2B) } );
+
+        deltas.push_back( { dt2B, dp2A, dg2A, std::abs(dt2B) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 + std::abs(dg2A) } );
+        deltas.push_back( { dt2B, dp2A, dg2B, std::abs(dt2B) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 + std::abs(dg2B) } );
+        deltas.push_back( { dt2B, dp2B, dg2A, std::abs(dt2B) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 + std::abs(dg2A) } );
+        deltas.push_back( { dt2B, dp2B, dg2B, std::abs(dt2B) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 + std::abs(dg2B) } );
     }
-    
-    int orientation = joint1Pos.orientation(joint2Pos, endEffectorPos);
-    if (joint1Pos.orientation(joint2Pos, endEffectorPos) > 0)
-    {
-        dp1A = 360 - joint2Rot + phi1;
-        dp1B = -360.f + dp1A;
-        dp2A = 360.f - joint2Rot + phi2;
-        dp2B = -360.f + dp2A;
-    }
-
-    if (joint2Pos.orientation(endEffectorPos, Vector3d(x, y)) > 0)
-    {
-        dg1A = 360 - joint3Rot + gamma1;
-        dg1B = -360.f + dg1A;
-        dg2A = 360.f - joint3Rot + gamma2;
-        dg2B = -360.f + dg2A;
-    }
-
-    deltas.push_back( { dt1A, dp1A, dg1A, std::abs(dt1A) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 + std::abs(dg1A) } );
-    deltas.push_back( { dt1A, dp1A, dg1B, std::abs(dt1A) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 + std::abs(dg1B) } );
-    deltas.push_back( { dt1A, dp1B, dg1A, std::abs(dt1A) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 + std::abs(dg1A) } );
-    deltas.push_back( { dt1A, dp1B, dg1B, std::abs(dt1A) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 + std::abs(dg1B) } );
-
-    deltas.push_back( { dt1B, dp1A, dg1A, std::abs(dt1B) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 + std::abs(dg1A) } );
-    deltas.push_back( { dt1B, dp1A, dg1B, std::abs(dt1B) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 + std::abs(dg1B) } );
-    deltas.push_back( { dt1B, dp1B, dg1A, std::abs(dt1B) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 + std::abs(dg1A) } );
-    deltas.push_back( { dt1B, dp1B, dg1B, std::abs(dt1B) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 + std::abs(dg1B) } );
-
-    deltas.push_back( { dt2A, dp2A, dg2A, std::abs(dt2A) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 + std::abs(dg2A) } );
-    deltas.push_back( { dt2A, dp2A, dg2B, std::abs(dt2A) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 + std::abs(dg2B) } );
-    deltas.push_back( { dt2A, dp2B, dg2A, std::abs(dt2A) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 + std::abs(dg2A) } );
-    deltas.push_back( { dt2A, dp2B, dg2B, std::abs(dt2A) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 + std::abs(dg2B) } );
-
-    deltas.push_back( { dt2B, dp2A, dg2A, std::abs(dt2B) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 + std::abs(dg2A) } );
-    deltas.push_back( { dt2B, dp2A, dg2B, std::abs(dt2B) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 + std::abs(dg2B) } );
-    deltas.push_back( { dt2B, dp2B, dg2A, std::abs(dt2B) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 + std::abs(dg2A) } );
-    deltas.push_back( { dt2B, dp2B, dg2B, std::abs(dt2B) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 + std::abs(dg2B) } );
 
     std::sort(deltas.begin(), deltas.end(), compareDelta);
 
     return deltas;
-}
-
-std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(float x, float y, int step) 
-{
-    std::vector<std::vector<Vector3d>> retData = { };
-    
-    float theta = m_jointComponents[0]->getRotation().z, phi = m_jointComponents[1]->getRotation().z;
-    float joint1Rot = m_jointComponents[0]->getRotation().z;
-    float joint2Rot = m_jointComponents[1]->getRotation().z;
-
-    std::vector<std::vector<float>> deltas = getDeltasBetweenPoses(x, y);
-    float deltaT = deltas[0][0], deltaP = deltas[0][1];
-    float maxDelta = std::max(std::abs(deltaT), std::abs(deltaP));
-    
-    float unitDeltaT = deltaT / maxDelta;
-    float unitDeltaP = deltaP / maxDelta;
-
-    for (int i = 0; i < (int)maxDelta; i++)
-    {
-        if (i%step == 0)
-        {
-            std::vector<Vector3d> stepToRender = { Vector3d(0.f, 0.f, 0.f) };
-            joint1Rot = m_jointComponents[0]->getRotation().z;
-            joint2Rot = m_jointComponents[1]->getRotation().z;
-            float rotA = joint1Rot + unitDeltaT;
-            float rotB = joint2Rot + unitDeltaP;
-            if (rotA < 0.f)
-                rotA += 360.f;
-            if (rotB < 0.f)
-                rotB += 360.f;
-            if (rotA > 360.f)
-                rotA = fmod(rotA, 360.f);
-            if (rotB < 0.f)
-                rotB = fmod(rotB, 360.f);
-            
-            actuateJoints({ rotA, rotB });
-            Vector3d joint2Pos = m_jointComponents[1]->getTransformedPoints()[0];
-            Vector3d endEffPos = m_endEffComponent->getTransformedPoints()[0];
-
-            stepToRender.push_back(Vector3d(joint2Pos.x, joint2Pos.y, 0.f));
-            stepToRender.push_back(Vector3d(endEffPos.x, endEffPos.y, 0.f));
-            stepToRender.push_back(Vector3d(rotA, rotB, 0.f));
-            retData.push_back(stepToRender);
-        }
-        theta += unitDeltaT;
-        phi += unitDeltaP;
-
-        if (phi < 0) phi += 360.f;
-        if (theta < 0) theta += 360.f;
-        if (theta > 360.f)
-            theta = fmod(theta, 360.f);
-        if (phi > 360.f)
-            phi = fmod(phi, 360.f);
-        std::vector<float> rotate = { theta, phi };
-        
-        actuateJoints(rotate);
-    }
-    std::vector<Vector3d> stepToRender = { Vector3d(0.f, 0.f, 0.f) };
-    Vector3d joint2Pos = m_jointComponents[1]->getTransformedPoints()[0];
-    Vector3d endEffPos = m_endEffComponent->getTransformedPoints()[0];
-
-    stepToRender.push_back(Vector3d(joint2Pos.x, joint2Pos.y, 0.f));
-    stepToRender.push_back(Vector3d(endEffPos.x, endEffPos.y, 0.f));
-    stepToRender.push_back(Vector3d(theta, phi, 0.f));
-    retData.push_back(stepToRender);
-
-    return retData;
 }
 
 std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(Vector3d pos, float rot, int step) 
