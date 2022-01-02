@@ -60,6 +60,8 @@ private:
     RevolutePrismatic m_derivedRP = RevolutePrismatic();
     RevoluteRevolute m_derivedRR  = RevoluteRevolute();
 
+    std::vector<Vector3d> m_RRTarget = { Vector3d(), Vector3d(14.f, 14.f), Vector3d() };
+
     bool m_RRActivated = false;
     bool m_RPActivated = false;
     bool m_PRActivated = false;

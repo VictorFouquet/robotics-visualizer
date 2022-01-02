@@ -127,7 +127,8 @@ void App::computeRobotBaseFrame()
         baseFrame.push_back(
             Vector3d(
                 m_robot->getJointComponents()[0]->getRotation().z,
-                m_robot->getJointComponents()[1]->getRotation().z
+                m_robot->getJointComponents()[1]->getRotation().z,
+                m_robot->getJointComponents()[2]->getRotation().z
             )
         );
     }
@@ -165,6 +166,16 @@ void App::computeRobotBaseFrame()
 
 Frame App::computeRRFrame(std::vector<Vector3d> step, Frame frame)
 {
+    if (m_RRTarget[0].magnitude())
+    {
+        frame.addRectangle(
+            m_RRTarget[1].x, m_RRTarget[1].y,
+            m_windowWidth / 2 + m_RRTarget[0].x - m_RRTarget[1].x / 2, 
+            m_windowHeight / 2 - m_RRTarget[0].y - m_RRTarget[1].y / 2,
+            255,0,0
+        );
+    }
+
     frame.addCircle(m_windowWidth / 2 + step[0].x, m_windowHeight / 2 + step[0].y, 10);
     frame.addCircle(m_windowWidth / 2 + step[1].x, m_windowHeight / 2 - step[1].y, 10);
     frame.addCircle(m_windowWidth / 2 + step[2].x, m_windowHeight / 2 - step[2].y, 10);
@@ -189,10 +200,10 @@ Frame App::computeRRFrame(std::vector<Vector3d> step, Frame frame)
     i++;
     frame.addMessage("a2: " + std::to_string(step.back().y), "roboto.ttf", 500, 100 + i * 15, 12);
     i++;
-
+    frame.addMessage("a3: " + std::to_string(step.back().z), "roboto.ttf", 500, 100 + i * 15, 12);
+    i++;
     frame.addCircleBorder(m_windowWidth / 2, m_windowHeight / 2, 150.f, 100.f);
 
-    frame.addRectangle(20, 20, 300, 100, 255, 255, 255);
     return frame;
 }
 
@@ -306,6 +317,7 @@ void App::handleRRClick(float x, float y)
     float dist = std::sqrt(x * x + y * y);
     if (dist > 50.f && dist < 150.f)
     {
+        m_RRTarget[0] = Vector3d(x, y);
         std::vector<std::vector<Vector3d>> stepsToRender = m_robot->interpolate(Vector3d(x, y), 0.f, 5);
         for (auto step : stepsToRender)
         {
