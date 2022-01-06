@@ -1,5 +1,7 @@
 #include "revoluteRevolute.h"
 #include "circle.h"
+#include "segment.h"
+
 #include <assert.h>
 #include <algorithm>
 
@@ -188,26 +190,77 @@ std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x,
             dg2A = 360.f - joint3Rot + gamma2;
             dg2B = -360.f + dg2A;
         }
+        if (std::abs(dt1A) <= 180.f)
+        {
+            if (std::abs(dp1A) <= 180.f)
+            {
+                if (std::abs(dg1A) <= 180.f)
+                    deltas.push_back( { dt1A, dp1A, dg1A, std::abs(dt1A) * m_weightLink1 * 2 + std::abs(dp1A) * m_weightLink2 * 10 + std::abs(dg1A) } );
+                if (std::abs(dg1B) <= 180.f)
+                    deltas.push_back( { dt1A, dp1A, dg1B, std::abs(dt1A) * m_weightLink1 * 2 + std::abs(dp1A) * m_weightLink2 * 10 + std::abs(dg1B) } );
+            }
+            if (std::abs(dp1B) <= 180.f)
+            {
+                if (std::abs(dg1A) <= 180.f)
+                    deltas.push_back( { dt1A, dp1B, dg1A, std::abs(dt1A) * m_weightLink1 * 2 + std::abs(dp1B) * m_weightLink2 * 10 + std::abs(dg1A) } );
+                if (std::abs(dg1B) <= 180.f)
+                    deltas.push_back( { dt1A, dp1B, dg1B, std::abs(dt1A) * m_weightLink1 * 2 + std::abs(dp1B) * m_weightLink2 * 10 + std::abs(dg1B) } );
+            }
+        }
 
-        deltas.push_back( { dt1A, dp1A, dg1A, std::abs(dt1A) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 + std::abs(dg1A) } );
-        deltas.push_back( { dt1A, dp1A, dg1B, std::abs(dt1A) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 + std::abs(dg1B) } );
-        deltas.push_back( { dt1A, dp1B, dg1A, std::abs(dt1A) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 + std::abs(dg1A) } );
-        deltas.push_back( { dt1A, dp1B, dg1B, std::abs(dt1A) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 + std::abs(dg1B) } );
+        if (std::abs(dt1B) <= 180.f)
+        {
+            if (std::abs(dp1A) <= 180.f)
+            {
+                if (std::abs(dg1A) <= 180.f)
+                    deltas.push_back( { dt1B, dp1A, dg1A, std::abs(dt1B) * m_weightLink1 * 2 + std::abs(dp1A) * m_weightLink2 * 10 + std::abs(dg1A) } );
+                if (std::abs(dg1B) <= 180.f)
+                    deltas.push_back( { dt1B, dp1A, dg1B, std::abs(dt1B) * m_weightLink1 * 2 + std::abs(dp1A) * m_weightLink2 * 10 + std::abs(dg1B) } );
+            }
+            if (std::abs(dp1B) <= 180.f)
+            {
+                if (std::abs(dg1A) <= 180.f)
+                    deltas.push_back( { dt1B, dp1B, dg1A, std::abs(dt1B) * m_weightLink1 * 2 + std::abs(dp1B) * m_weightLink2 * 10 + std::abs(dg1A) } );
+                if (std::abs(dg1B) <= 180.f)
+                    deltas.push_back( { dt1B, dp1B, dg1B, std::abs(dt1B) * m_weightLink1 * 2 + std::abs(dp1B) * m_weightLink2 * 10 + std::abs(dg1B) } );
+            }
+        }
 
-        deltas.push_back( { dt1B, dp1A, dg1A, std::abs(dt1B) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 + std::abs(dg1A) } );
-        deltas.push_back( { dt1B, dp1A, dg1B, std::abs(dt1B) * m_weightLink1 + std::abs(dp1A) * m_weightLink2 + std::abs(dg1B) } );
-        deltas.push_back( { dt1B, dp1B, dg1A, std::abs(dt1B) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 + std::abs(dg1A) } );
-        deltas.push_back( { dt1B, dp1B, dg1B, std::abs(dt1B) * m_weightLink1 + std::abs(dp1B) * m_weightLink2 + std::abs(dg1B) } );
+        if (std::abs(dt2A) <= 180.f)
+        {
+            if (std::abs(dp2A) <= 180.f)
+            {
+                if (std::abs(dg2A) <= 180.f)
+                    deltas.push_back( { dt2A, dp2A, dg2A, std::abs(dt2A) * m_weightLink1 * 2 + std::abs(dp2A) * m_weightLink2 * 10 + std::abs(dg2A) } );
+                if (std::abs(dg2B) <= 180.f)
+                    deltas.push_back( { dt2A, dp2A, dg2B, std::abs(dt2A) * m_weightLink1 * 2 + std::abs(dp2A) * m_weightLink2 * 10 + std::abs(dg2B) } );
+            }
+            if (std::abs(dp2B) <= 180.f)
+            {
+                if (std::abs(dg2A) <= 180.f)
+                    deltas.push_back( { dt2A, dp2B, dg2A, std::abs(dt2A) * m_weightLink1 * 2 + std::abs(dp2B) * m_weightLink2 * 10 + std::abs(dg2A) } );
+                if (std::abs(dg2B) <= 180.f)
+                    deltas.push_back( { dt2A, dp2B, dg2B, std::abs(dt2A) * m_weightLink1 * 2 + std::abs(dp2B) * m_weightLink2 * 10 + std::abs(dg2B) } );
+            }
+        }
 
-        deltas.push_back( { dt2A, dp2A, dg2A, std::abs(dt2A) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 + std::abs(dg2A) } );
-        deltas.push_back( { dt2A, dp2A, dg2B, std::abs(dt2A) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 + std::abs(dg2B) } );
-        deltas.push_back( { dt2A, dp2B, dg2A, std::abs(dt2A) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 + std::abs(dg2A) } );
-        deltas.push_back( { dt2A, dp2B, dg2B, std::abs(dt2A) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 + std::abs(dg2B) } );
-
-        deltas.push_back( { dt2B, dp2A, dg2A, std::abs(dt2B) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 + std::abs(dg2A) } );
-        deltas.push_back( { dt2B, dp2A, dg2B, std::abs(dt2B) * m_weightLink1 + std::abs(dp2A) * m_weightLink2 + std::abs(dg2B) } );
-        deltas.push_back( { dt2B, dp2B, dg2A, std::abs(dt2B) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 + std::abs(dg2A) } );
-        deltas.push_back( { dt2B, dp2B, dg2B, std::abs(dt2B) * m_weightLink1 + std::abs(dp2B) * m_weightLink2 + std::abs(dg2B) } );
+        if (std::abs(dt2B) <= 180.f)
+        {
+            if (std::abs(dp2A) <= 180.f)
+            {
+                if (std::abs(dg2A) <= 180.f)
+                    deltas.push_back( { dt2B, dp2A, dg2A, std::abs(dt2B) * m_weightLink1 * 2 + std::abs(dp2A) * m_weightLink2 * 10 + std::abs(dg2A) } );
+                if (std::abs(dg2B) <= 180.f)
+                    deltas.push_back( { dt2B, dp2A, dg2B, std::abs(dt2B) * m_weightLink1 * 2 + std::abs(dp2A) * m_weightLink2 * 10 + std::abs(dg2B) } );
+            }
+            if (std::abs(dp2B) <= 180.f)
+            {
+                if (std::abs(dg2A) <= 180.f)
+                    deltas.push_back( { dt2B, dp2B, dg2A, std::abs(dt2B) * m_weightLink1 * 2 + std::abs(dp2B) * m_weightLink2 * 10 + std::abs(dg2A) } );
+                if (std::abs(dg2B) <= 180.f)
+                    deltas.push_back( { dt2B, dp2B, dg2B, std::abs(dt2B) * m_weightLink1 * 2 + std::abs(dp2B) * m_weightLink2 * 10 + std::abs(dg2B) } );
+            }
+        }
     }
 
     std::sort(deltas.begin(), deltas.end(), compareDelta);
@@ -270,7 +323,7 @@ std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(Vector3d pos, f
             stepToRender.push_back(Vector3d(joint2Pos.x, joint2Pos.y, 0.f));
             for (auto p : endEffPos)
                 stepToRender.push_back(p);
-            stepToRender.push_back(Vector3d(rotA, rotB, 0.f));
+            stepToRender.push_back(Vector3d(rotA, rotB, rotC));
             retData.push_back(stepToRender);
         }
         theta += unitDeltaT;
@@ -300,7 +353,7 @@ std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(Vector3d pos, f
     stepToRender.push_back(Vector3d(joint2Pos.x, joint2Pos.y, 0.f));
     for (auto p : endEffPos)
         stepToRender.push_back(p);
-    stepToRender.push_back(Vector3d(theta, phi, 0.f));
+    stepToRender.push_back(Vector3d(theta, phi, gamma));
     retData.push_back(stepToRender);
 
     return retData;

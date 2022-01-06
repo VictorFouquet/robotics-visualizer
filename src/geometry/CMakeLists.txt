@@ -1,5 +1,6 @@
 add_library(geometry
     circle.cpp
+    segment.cpp
 )
 
 target_include_directories(geometry PUBLIC
