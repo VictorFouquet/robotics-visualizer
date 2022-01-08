@@ -131,6 +131,112 @@ bool RevoluteRevolute::compareDelta(std::vector<float> a, std::vector<float> b)
     return a.back() < b.back();
 }
 
+std::vector<std::vector<float>> RevoluteRevolute::getCollisionFreePath(std::vector<std::vector<float>> deltas, Vector3d pos, float rot) 
+{
+    bool intersectsWithTarget = false;
+
+    Matrix m = Matrix::translate(pos.x, pos.y, 0.f) * Matrix::rotate(0.f, 0.f, rot) *  Matrix::identity();
+    
+    Vector3d p1 = m * Vector3d(-7.f, -7.f);
+    Vector3d p2 = m * Vector3d( 7.f, -7.f);
+    Vector3d p3 = m * Vector3d( 7.f,  7.f);
+    Vector3d p4 = m * Vector3d(-7.f,  7.f);
+
+    std::vector<Geometry::Segment> segments = {
+        Geometry::Segment(p1, p2),
+        Geometry::Segment(p2, p3),
+        Geometry::Segment(p3, p4),
+        Geometry::Segment(p4, p1)
+    };
+
+    std::vector<std::vector<Vector3d>> retData = { };
+    
+    float theta = m_jointComponents[0]->getRotation().z;
+    float phi = m_jointComponents[1]->getRotation().z;
+    float gamma = m_jointComponents[2]->getRotation().z;
+
+    std::vector<std::vector<float>> steps;
+
+    for (auto d : deltas)
+    {
+        steps = {};
+        intersectsWithTarget = false;
+
+        float joint1Rot = m_jointComponents[0]->getRotation().z;
+        float joint2Rot = m_jointComponents[1]->getRotation().z;
+        float joint3Rot = m_jointComponents[2]->getRotation().z;
+
+        float deltaT = d[0], deltaP = d[1], deltaG = d[2];
+        float maxDelta = std::max(std::abs(deltaT), std::abs(deltaP));
+        maxDelta = std::max(maxDelta, std::abs(deltaG));
+        
+        float unitDeltaT = deltaT / maxDelta;
+        float unitDeltaP = deltaP / maxDelta;
+        float unitDeltaG = deltaG / maxDelta;
+
+        for (int i = 0; i < (int)maxDelta; i++)
+        {
+            std::vector<float> step = {};
+            joint1Rot = m_jointComponents[0]->getRotation().z;
+            joint2Rot = m_jointComponents[1]->getRotation().z;
+            joint3Rot = m_jointComponents[2]->getRotation().z;
+
+            float rotA = joint1Rot + unitDeltaT;
+            float rotB = joint2Rot + unitDeltaP;
+            float rotC = joint3Rot + unitDeltaG;
+
+            if (rotA < 0.f)
+                rotA += 360.f;
+            if (rotB < 0.f)
+                rotB += 360.f;
+            if (rotC < 0.f)
+                rotC += 360.f;
+            if (rotA > 360.f)
+                rotA = fmod(rotA, 360.f);
+            if (rotB < 0.f)
+                rotB = fmod(rotB, 360.f);
+            if (rotC < 0.f)
+                rotC = fmod(rotC, 360.f);
+            
+            actuateJoints({ rotA, rotB, rotC });
+
+            Vector3d joint1Pos = m_jointComponents[0]->getTransformedPoints()[0];
+            Vector3d joint2Pos = m_jointComponents[1]->getTransformedPoints()[0];
+            Vector3d joint3Pos = m_jointComponents[2]->getTransformedPoints()[0];
+            Vector3d endEffPos = m_endEffComponent->getTransformedPoints()[0];
+            
+            std::vector<Geometry::Segment> armSegments = {
+                Geometry::Segment(joint1Pos, joint2Pos),
+                Geometry::Segment(joint2Pos, joint3Pos),
+                Geometry::Segment(joint3Pos, endEffPos)
+            };
+
+            for (auto s : segments)
+            {
+                for (auto armSegment : armSegments)
+                {
+                    if (s.intersectsWithSegment(armSegment))
+                        intersectsWithTarget = true;
+                }
+            }
+
+            if (intersectsWithTarget) break;
+
+            steps.push_back({ rotA, rotB, rotC });
+        }
+
+        actuateJoints({ theta, phi, gamma });
+
+        if (!intersectsWithTarget)
+        {
+            steps.push_back({ theta + d[0], phi + d[1], gamma + d[2] });
+            return steps;
+        }
+    }
+
+    return {};
+}
+
 std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x, float y, float rotz) 
 {
     std::vector<std::vector<float>> deltas = {};
@@ -190,77 +296,23 @@ std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x,
             dg2A = 360.f - joint3Rot + gamma2;
             dg2B = -360.f + dg2A;
         }
-        if (std::abs(dt1A) <= 180.f)
-        {
-            if (std::abs(dp1A) <= 180.f)
-            {
-                if (std::abs(dg1A) <= 180.f)
-                    deltas.push_back( { dt1A, dp1A, dg1A, std::abs(dt1A) * m_weightLink1 * 2 + std::abs(dp1A) * m_weightLink2 * 10 + std::abs(dg1A) } );
-                if (std::abs(dg1B) <= 180.f)
-                    deltas.push_back( { dt1A, dp1A, dg1B, std::abs(dt1A) * m_weightLink1 * 2 + std::abs(dp1A) * m_weightLink2 * 10 + std::abs(dg1B) } );
-            }
-            if (std::abs(dp1B) <= 180.f)
-            {
-                if (std::abs(dg1A) <= 180.f)
-                    deltas.push_back( { dt1A, dp1B, dg1A, std::abs(dt1A) * m_weightLink1 * 2 + std::abs(dp1B) * m_weightLink2 * 10 + std::abs(dg1A) } );
-                if (std::abs(dg1B) <= 180.f)
-                    deltas.push_back( { dt1A, dp1B, dg1B, std::abs(dt1A) * m_weightLink1 * 2 + std::abs(dp1B) * m_weightLink2 * 10 + std::abs(dg1B) } );
-            }
-        }
 
-        if (std::abs(dt1B) <= 180.f)
-        {
-            if (std::abs(dp1A) <= 180.f)
-            {
-                if (std::abs(dg1A) <= 180.f)
-                    deltas.push_back( { dt1B, dp1A, dg1A, std::abs(dt1B) * m_weightLink1 * 2 + std::abs(dp1A) * m_weightLink2 * 10 + std::abs(dg1A) } );
-                if (std::abs(dg1B) <= 180.f)
-                    deltas.push_back( { dt1B, dp1A, dg1B, std::abs(dt1B) * m_weightLink1 * 2 + std::abs(dp1A) * m_weightLink2 * 10 + std::abs(dg1B) } );
-            }
-            if (std::abs(dp1B) <= 180.f)
-            {
-                if (std::abs(dg1A) <= 180.f)
-                    deltas.push_back( { dt1B, dp1B, dg1A, std::abs(dt1B) * m_weightLink1 * 2 + std::abs(dp1B) * m_weightLink2 * 10 + std::abs(dg1A) } );
-                if (std::abs(dg1B) <= 180.f)
-                    deltas.push_back( { dt1B, dp1B, dg1B, std::abs(dt1B) * m_weightLink1 * 2 + std::abs(dp1B) * m_weightLink2 * 10 + std::abs(dg1B) } );
-            }
-        }
-
-        if (std::abs(dt2A) <= 180.f)
-        {
-            if (std::abs(dp2A) <= 180.f)
-            {
-                if (std::abs(dg2A) <= 180.f)
-                    deltas.push_back( { dt2A, dp2A, dg2A, std::abs(dt2A) * m_weightLink1 * 2 + std::abs(dp2A) * m_weightLink2 * 10 + std::abs(dg2A) } );
-                if (std::abs(dg2B) <= 180.f)
-                    deltas.push_back( { dt2A, dp2A, dg2B, std::abs(dt2A) * m_weightLink1 * 2 + std::abs(dp2A) * m_weightLink2 * 10 + std::abs(dg2B) } );
-            }
-            if (std::abs(dp2B) <= 180.f)
-            {
-                if (std::abs(dg2A) <= 180.f)
-                    deltas.push_back( { dt2A, dp2B, dg2A, std::abs(dt2A) * m_weightLink1 * 2 + std::abs(dp2B) * m_weightLink2 * 10 + std::abs(dg2A) } );
-                if (std::abs(dg2B) <= 180.f)
-                    deltas.push_back( { dt2A, dp2B, dg2B, std::abs(dt2A) * m_weightLink1 * 2 + std::abs(dp2B) * m_weightLink2 * 10 + std::abs(dg2B) } );
-            }
-        }
-
-        if (std::abs(dt2B) <= 180.f)
-        {
-            if (std::abs(dp2A) <= 180.f)
-            {
-                if (std::abs(dg2A) <= 180.f)
-                    deltas.push_back( { dt2B, dp2A, dg2A, std::abs(dt2B) * m_weightLink1 * 2 + std::abs(dp2A) * m_weightLink2 * 10 + std::abs(dg2A) } );
-                if (std::abs(dg2B) <= 180.f)
-                    deltas.push_back( { dt2B, dp2A, dg2B, std::abs(dt2B) * m_weightLink1 * 2 + std::abs(dp2A) * m_weightLink2 * 10 + std::abs(dg2B) } );
-            }
-            if (std::abs(dp2B) <= 180.f)
-            {
-                if (std::abs(dg2A) <= 180.f)
-                    deltas.push_back( { dt2B, dp2B, dg2A, std::abs(dt2B) * m_weightLink1 * 2 + std::abs(dp2B) * m_weightLink2 * 10 + std::abs(dg2A) } );
-                if (std::abs(dg2B) <= 180.f)
-                    deltas.push_back( { dt2B, dp2B, dg2B, std::abs(dt2B) * m_weightLink1 * 2 + std::abs(dp2B) * m_weightLink2 * 10 + std::abs(dg2B) } );
-            }
-        }
+        deltas.push_back( { dt1A, dp1A, dg1A, std::abs(dt1A) * m_weightLink1 * 2 + std::abs(dp1A) * m_weightLink2 * 10 + std::abs(dg1A) } );
+        deltas.push_back( { dt1A, dp1A, dg1B, std::abs(dt1A) * m_weightLink1 * 2 + std::abs(dp1A) * m_weightLink2 * 10 + std::abs(dg1B) } );
+        deltas.push_back( { dt1A, dp1B, dg1A, std::abs(dt1A) * m_weightLink1 * 2 + std::abs(dp1B) * m_weightLink2 * 10 + std::abs(dg1A) } );
+        deltas.push_back( { dt1A, dp1B, dg1B, std::abs(dt1A) * m_weightLink1 * 2 + std::abs(dp1B) * m_weightLink2 * 10 + std::abs(dg1B) } );
+        deltas.push_back( { dt1B, dp1A, dg1A, std::abs(dt1B) * m_weightLink1 * 2 + std::abs(dp1A) * m_weightLink2 * 10 + std::abs(dg1A) } );
+        deltas.push_back( { dt1B, dp1A, dg1B, std::abs(dt1B) * m_weightLink1 * 2 + std::abs(dp1A) * m_weightLink2 * 10 + std::abs(dg1B) } );
+        deltas.push_back( { dt1B, dp1B, dg1A, std::abs(dt1B) * m_weightLink1 * 2 + std::abs(dp1B) * m_weightLink2 * 10 + std::abs(dg1A) } );
+        deltas.push_back( { dt1B, dp1B, dg1B, std::abs(dt1B) * m_weightLink1 * 2 + std::abs(dp1B) * m_weightLink2 * 10 + std::abs(dg1B) } );
+        deltas.push_back( { dt2A, dp2A, dg2A, std::abs(dt2A) * m_weightLink1 * 2 + std::abs(dp2A) * m_weightLink2 * 10 + std::abs(dg2A) } );
+        deltas.push_back( { dt2A, dp2A, dg2B, std::abs(dt2A) * m_weightLink1 * 2 + std::abs(dp2A) * m_weightLink2 * 10 + std::abs(dg2B) } );
+        deltas.push_back( { dt2A, dp2B, dg2A, std::abs(dt2A) * m_weightLink1 * 2 + std::abs(dp2B) * m_weightLink2 * 10 + std::abs(dg2A) } );
+        deltas.push_back( { dt2A, dp2B, dg2B, std::abs(dt2A) * m_weightLink1 * 2 + std::abs(dp2B) * m_weightLink2 * 10 + std::abs(dg2B) } );
+        deltas.push_back( { dt2B, dp2A, dg2A, std::abs(dt2B) * m_weightLink1 * 2 + std::abs(dp2A) * m_weightLink2 * 10 + std::abs(dg2A) } );
+        deltas.push_back( { dt2B, dp2A, dg2B, std::abs(dt2B) * m_weightLink1 * 2 + std::abs(dp2A) * m_weightLink2 * 10 + std::abs(dg2B) } );
+        deltas.push_back( { dt2B, dp2B, dg2A, std::abs(dt2B) * m_weightLink1 * 2 + std::abs(dp2B) * m_weightLink2 * 10 + std::abs(dg2A) } );
+        deltas.push_back( { dt2B, dp2B, dg2B, std::abs(dt2B) * m_weightLink1 * 2 + std::abs(dp2B) * m_weightLink2 * 10 + std::abs(dg2B) } );
     }
 
     std::sort(deltas.begin(), deltas.end(), compareDelta);
@@ -270,91 +322,32 @@ std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x,
 
 std::vector<std::vector<Vector3d>> RevoluteRevolute::interpolate(Vector3d pos, float rot, int step) 
 {
-    std::vector<std::vector<float>> deltas = getDeltasBetweenPoses(pos.x, pos.y, rot);
     std::vector<std::vector<Vector3d>> retData = { };
-    
-    float theta = m_jointComponents[0]->getRotation().z;
-    float phi = m_jointComponents[1]->getRotation().z;
-    float gamma = m_jointComponents[2]->getRotation().z;
 
-    float joint1Rot = m_jointComponents[0]->getRotation().z;
-    float joint2Rot = m_jointComponents[1]->getRotation().z;
-    float joint3Rot = m_jointComponents[2]->getRotation().z;
+    std::vector<std::vector<float>> deltas = getDeltasBetweenPoses(pos.x, pos.y, rot);    
+    std::vector<std::vector<float>> path = getCollisionFreePath(deltas, pos, rot);
 
-    float deltaT = deltas[0][0], deltaP = deltas[0][1], deltaG = deltas[0][2];
-    float maxDelta = std::max(std::abs(deltaT), std::abs(deltaP));
-    maxDelta = std::max(maxDelta, std::abs(deltaG));
-    
-    float unitDeltaT = deltaT / maxDelta;
-    float unitDeltaP = deltaP / maxDelta;
-    float unitDeltaG = deltaG / maxDelta;
-
-    for (int i = 0; i < (int)maxDelta; i++)
+    int i = 0;
+    for (auto part : path)
     {
-        if (i%step == 0)
+        if (i%step == 0 || part == path.back())
         {
-            std::vector<Vector3d> stepToRender = { Vector3d(0.f, 0.f, 0.f) };
-            joint1Rot = m_jointComponents[0]->getRotation().z;
-            joint2Rot = m_jointComponents[1]->getRotation().z;
-            joint3Rot = m_jointComponents[2]->getRotation().z;
-
-            float rotA = joint1Rot + unitDeltaT;
-            float rotB = joint2Rot + unitDeltaP;
-            float rotC = joint3Rot + unitDeltaG;
-
-            if (rotA < 0.f)
-                rotA += 360.f;
-            if (rotB < 0.f)
-                rotB += 360.f;
-            if (rotC < 0.f)
-                rotC += 360.f;
-            if (rotA > 360.f)
-                rotA = fmod(rotA, 360.f);
-            if (rotB < 0.f)
-                rotB = fmod(rotB, 360.f);
-            if (rotC < 0.f)
-                rotC = fmod(rotC, 360.f);
-            
-            actuateJoints({ rotA, rotB, rotC });
-
+            actuateJoints(part);
             Vector3d joint2Pos = m_jointComponents[1]->getTransformedPoints()[0];
             std::vector<Vector3d> endEffPos = m_endEffComponent->getTransformedPoints();
 
+            std::vector<Vector3d> stepToRender = { Vector3d(0.f, 0.f, 0.f) };
             stepToRender.push_back(Vector3d(joint2Pos.x, joint2Pos.y, 0.f));
+            
             for (auto p : endEffPos)
                 stepToRender.push_back(p);
-            stepToRender.push_back(Vector3d(rotA, rotB, rotC));
+            
+            stepToRender.push_back(Vector3d(part[0], part[1], part[2]));
             retData.push_back(stepToRender);
+
         }
-        theta += unitDeltaT;
-        phi += unitDeltaP;
-        gamma += unitDeltaG;
-
-        if (phi < 0) phi += 360.f;
-        if (theta < 0) theta += 360.f;
-        if (gamma < 0) gamma += 360.f;
-
-        if (theta > 360.f)
-            theta = fmod(theta, 360.f);
-        if (phi > 360.f)
-            phi = fmod(phi, 360.f);
-        if (gamma > 360.f)
-            gamma = fmod(gamma, 360.f);
-
-        std::vector<float> rotate = { theta, phi, gamma };
-        
-        actuateJoints(rotate);
+        i+=1;
     }
-
-    std::vector<Vector3d> stepToRender = { Vector3d(0.f, 0.f, 0.f) };
-    Vector3d joint2Pos = m_jointComponents[1]->getTransformedPoints()[0];
-    std::vector<Vector3d> endEffPos = m_endEffComponent->getTransformedPoints();
-
-    stepToRender.push_back(Vector3d(joint2Pos.x, joint2Pos.y, 0.f));
-    for (auto p : endEffPos)
-        stepToRender.push_back(p);
-    stepToRender.push_back(Vector3d(theta, phi, gamma));
-    retData.push_back(stepToRender);
 
     return retData;
 }
