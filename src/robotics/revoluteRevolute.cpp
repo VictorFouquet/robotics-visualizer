@@ -237,6 +237,11 @@ std::vector<std::vector<float>> RevoluteRevolute::getCollisionFreePath(std::vect
     return {};
 }
 
+float RevoluteRevolute::getDeltasWeight(float theta, float phi, float gamma) 
+{
+    return std::abs(theta) * PI * 100 + std::abs(phi) * PI * 50 + std::abs(gamma) * PI * 10;
+}
+
 std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x, float y, float rotz) 
 {
     std::vector<std::vector<float>> deltas = {};
@@ -297,22 +302,22 @@ std::vector<std::vector<float>> RevoluteRevolute::getDeltasBetweenPoses(float x,
             dg2B = -360.f + dg2A;
         }
 
-        deltas.push_back( { dt1A, dp1A, dg1A, std::abs(dt1A) * m_weightLink1 * 2 + std::abs(dp1A) * m_weightLink2 * 10 + std::abs(dg1A) } );
-        deltas.push_back( { dt1A, dp1A, dg1B, std::abs(dt1A) * m_weightLink1 * 2 + std::abs(dp1A) * m_weightLink2 * 10 + std::abs(dg1B) } );
-        deltas.push_back( { dt1A, dp1B, dg1A, std::abs(dt1A) * m_weightLink1 * 2 + std::abs(dp1B) * m_weightLink2 * 10 + std::abs(dg1A) } );
-        deltas.push_back( { dt1A, dp1B, dg1B, std::abs(dt1A) * m_weightLink1 * 2 + std::abs(dp1B) * m_weightLink2 * 10 + std::abs(dg1B) } );
-        deltas.push_back( { dt1B, dp1A, dg1A, std::abs(dt1B) * m_weightLink1 * 2 + std::abs(dp1A) * m_weightLink2 * 10 + std::abs(dg1A) } );
-        deltas.push_back( { dt1B, dp1A, dg1B, std::abs(dt1B) * m_weightLink1 * 2 + std::abs(dp1A) * m_weightLink2 * 10 + std::abs(dg1B) } );
-        deltas.push_back( { dt1B, dp1B, dg1A, std::abs(dt1B) * m_weightLink1 * 2 + std::abs(dp1B) * m_weightLink2 * 10 + std::abs(dg1A) } );
-        deltas.push_back( { dt1B, dp1B, dg1B, std::abs(dt1B) * m_weightLink1 * 2 + std::abs(dp1B) * m_weightLink2 * 10 + std::abs(dg1B) } );
-        deltas.push_back( { dt2A, dp2A, dg2A, std::abs(dt2A) * m_weightLink1 * 2 + std::abs(dp2A) * m_weightLink2 * 10 + std::abs(dg2A) } );
-        deltas.push_back( { dt2A, dp2A, dg2B, std::abs(dt2A) * m_weightLink1 * 2 + std::abs(dp2A) * m_weightLink2 * 10 + std::abs(dg2B) } );
-        deltas.push_back( { dt2A, dp2B, dg2A, std::abs(dt2A) * m_weightLink1 * 2 + std::abs(dp2B) * m_weightLink2 * 10 + std::abs(dg2A) } );
-        deltas.push_back( { dt2A, dp2B, dg2B, std::abs(dt2A) * m_weightLink1 * 2 + std::abs(dp2B) * m_weightLink2 * 10 + std::abs(dg2B) } );
-        deltas.push_back( { dt2B, dp2A, dg2A, std::abs(dt2B) * m_weightLink1 * 2 + std::abs(dp2A) * m_weightLink2 * 10 + std::abs(dg2A) } );
-        deltas.push_back( { dt2B, dp2A, dg2B, std::abs(dt2B) * m_weightLink1 * 2 + std::abs(dp2A) * m_weightLink2 * 10 + std::abs(dg2B) } );
-        deltas.push_back( { dt2B, dp2B, dg2A, std::abs(dt2B) * m_weightLink1 * 2 + std::abs(dp2B) * m_weightLink2 * 10 + std::abs(dg2A) } );
-        deltas.push_back( { dt2B, dp2B, dg2B, std::abs(dt2B) * m_weightLink1 * 2 + std::abs(dp2B) * m_weightLink2 * 10 + std::abs(dg2B) } );
+        deltas.push_back( { dt1A, dp1A, dg1A, getDeltasWeight(dt1A, dp1A, dg1A) } );
+        deltas.push_back( { dt1A, dp1A, dg1B, getDeltasWeight(dt1A, dp1A, dg1B) } );
+        deltas.push_back( { dt1A, dp1B, dg1A, getDeltasWeight(dt1A, dp1B, dg1A) } );
+        deltas.push_back( { dt1A, dp1B, dg1B, getDeltasWeight(dt1A, dp1B, dg1B) } );
+        deltas.push_back( { dt1B, dp1A, dg1A, getDeltasWeight(dt1B, dp1A, dg1A) } );
+        deltas.push_back( { dt1B, dp1A, dg1B, getDeltasWeight(dt1B, dp1A, dg1B) } );
+        deltas.push_back( { dt1B, dp1B, dg1A, getDeltasWeight(dt1B, dp1B, dg1A) } );
+        deltas.push_back( { dt1B, dp1B, dg1B, getDeltasWeight(dt1B, dp1B, dg1B) } );
+        deltas.push_back( { dt2A, dp2A, dg2A, getDeltasWeight(dt2A, dp2A, dg2A) } );
+        deltas.push_back( { dt2A, dp2A, dg2B, getDeltasWeight(dt2A, dp2A, dg2B) } );
+        deltas.push_back( { dt2A, dp2B, dg2A, getDeltasWeight(dt2A, dp2B, dg2A) } );
+        deltas.push_back( { dt2A, dp2B, dg2B, getDeltasWeight(dt2A, dp2B, dg2B) } );
+        deltas.push_back( { dt2B, dp2A, dg2A, getDeltasWeight(dt2B, dp2A, dg2A) } );
+        deltas.push_back( { dt2B, dp2A, dg2B, getDeltasWeight(dt2B, dp2A, dg2B) } );
+        deltas.push_back( { dt2B, dp2B, dg2A, getDeltasWeight(dt2B, dp2B, dg2A) } );
+        deltas.push_back( { dt2B, dp2B, dg2B, getDeltasWeight(dt2B, dp2B, dg2B) } );
     }
 
     std::sort(deltas.begin(), deltas.end(), compareDelta);

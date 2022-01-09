@@ -28,6 +28,8 @@ public:
 private:
     static bool compareDelta(std::vector<float> a, std::vector<float> b);
     std::vector<std::vector<float>> getCollisionFreePath(std::vector<std::vector<float>> deltas, Vector3d pos, float rot);
+    float getDeltasWeight(float theta, float phi, float gamma);
+
 private:
     float m_theta, m_phi, m_weightLink1=20.f, m_weightLink2=1.f;
 };
